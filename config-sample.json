@@ -1,4 +1,4 @@
 {
-  "token": "REPLACE_THIS_WITH_YOUR_BOT_TOKEN",
-  "command-prefix": "!"
+  "discordToken": "REPLACE_THIS_WITH_YOUR_DISCORD_BOT_TOKEN",
+  "commandPrefix": "!"
 }

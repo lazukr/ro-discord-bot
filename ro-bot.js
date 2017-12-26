@@ -12,4 +12,4 @@ client.on("message", (message) => {
   }
 });
 
-client.login("Mzk1Mjg5NTQ4OTc4MTI2ODQ5.DSQtlw.r7DYOEk36mQucEBP6okJ_E53QXc")
+client.login(config.discordToken)
