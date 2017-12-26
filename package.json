@@ -1,0 +1,13 @@
+{
+  "name": "ro-discord-bot",
+  "version": "1.0.0",
+  "description": "Simple discord bot for RO based stuff using Node.js",
+  "main": "ro-bot.js",
+  "repository": "ssh://git@github.com/lazukr/ro-discord-bot.git",
+  "author": "lazukr <peterh10201@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^11.2.1",
+    "node": "^9.3.0"
+  }
+}
