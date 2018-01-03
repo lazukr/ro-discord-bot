@@ -6,8 +6,15 @@
   "repository": "ssh://git@github.com/lazukr/ro-discord-bot.git",
   "author": "lazukr <peterh10201@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "NODE_ENV=production node ro-bot.js",
+    "dev-start": "NODE_ENV=development node ro-bot.js"
+  },
   "dependencies": {
     "discord.js": "^11.2.1",
-    "node": "^9.3.0"
+    "enmap": "^0.4.2",
+    "enmap-level": "^1.0.0",
+    "node": "^9.3.0",
+    "winston": "^2.4.0"
   }
 }
