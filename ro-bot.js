@@ -9,7 +9,6 @@ const Enmap = require('enmap');
 const EnmapLevel = require('enmap-level');
 const readdir = util.promisify(fs.readdir);
 
-
 class RagnarokBot {
   constructor(logger, config) {
     this.logger = logger("Ragnarok Bot");
@@ -21,33 +20,49 @@ class RagnarokBot {
 
   async loadEvents(folderPath) {
     const eventFiles = await this._loadFolder(folderPath);
-    this.logger.info(`Loading ${eventFiles.length} event modules. (${eventFiles})`);
+    this.logger.info(`Loading ${eventFiles.length} event modules... (${eventFiles})`);
     eventFiles.forEach(file => {
       const eventName = file.split('.')[0];
       const eventFunction = require(`${folderPath}${file}`);
       this.client.on(eventName, eventFunction.bind(null, this));
-    }); 
+      this.logger.debug(`${file} loaded successfully.`);
+    });
+    this.logger.info(`Events loaded`);
   }
 
   async loadCommands(folderPath) {
-    const commandFiles = await this._loadFolder(folderPath);
-    this.logger.info(`Loading ${commandFiles.length} command modules. (${commandFiles})`);
-    
-    commandFiles.forEach(file => {
-      const command = require(`${folderPath}${file}`);
-      this.logger.info(`Loading Command: ${command.info.name}`);
-      this.commands.set(command.info.name, command);
-      
-    });
+   
+    const folders = await this._getFolders(folderPath);
+    this.logger.debug(`Loading ${folders.length} folder(s). (${folders})`);
+    for (let folder of folders) {
+      this.logger.info(`Loading Commands from the ${folder} folder...`);
+      const commandFiles = await this._loadFolder(`${folderPath}${folder}`);
+      this.logger.info(`Loading ${commandFiles.length} command module(s)... (${commandFiles})`);
+      commandFiles.forEach(file => {
+        const command = require(`${folderPath}${folder}/${file}`);
+        this.commands.set(command.info.name, command);
+        this.logger.debug(`${file} loaded successfully.`);
+      });
+      this.logger.info(`Commands loaded`);
+    }
   }
 
    _loadFolder(folderPath) {
       return readdir(folderPath)
         .then(list => {
-          return list.filter(item => item.endsWith('.js'));
+          return list.filter(file => file.endsWith('.js'));
         }).catch(err => {
           this.logger.error(err);
         });
+   }
+
+   _getFolders(folderPath) {
+    return readdir(folderPath)
+      .then(list => {
+        return list.filter(file => fs.lstatSync(`${folderPath}${file}/`).isDirectory());
+      }).catch(err => {
+        this.logger.error(err);
+      });
    }
 
   start() {
