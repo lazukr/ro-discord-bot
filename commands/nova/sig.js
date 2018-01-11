@@ -4,7 +4,7 @@ const POSE_MAX = 12;
 const BG_MAX = 10;
 exports.run = async (discordBot, message, args) => {
   logger.info(args);
-  if (!args) {
+  if (args.length === 0) {
     message.channel.send("Need to specify a name.");
     return;
   }

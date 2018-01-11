@@ -6,15 +6,16 @@ module.exports = (discordBot, message) => {
   // with the command prefix defined in the config
   if (message.content.indexOf(discordBot.config.commandPrefix) !== 0) return;
   const args = message.content.slice(discordBot.config.commandPrefix.length).trim().split(/ +/g);
-  const command = args.shift().toLowerCase();
-  const cmd = discordBot.commands.get(command);
-  if (!cmd) {
-    logger.debug(`${cmd} was not loaded or not found.`);
+  const commandKey = args.shift().toLowerCase();
+  const command = discordBot.commandList.get(commandKey);
+  if (!command) {
+    logger.debug(`${commandKey} was not loaded or not found.`);
+    message.channel.send(`${commandKey} was not loaded or not found. Please use \`${discordBot.config.commandPrefix}commands\` to see a list of the commands`);
     return;
   }
-  logger.info(`${message.author.username}(${message.author.id}) ran command ${cmd.info.name} with arguments: ${args}`);
-  cmd.run(discordBot, message, args)
+  logger.info(`${message.author.username}(${message.author.id}) ran command ${command.cmd.info.name} with arguments: ${args}`);
+  command.cmd.run(discordBot, message, args)
     .catch(err => {
-      console.log(err);
+      logger.error(err);
     });
 };
