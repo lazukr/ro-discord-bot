@@ -62,3 +62,7 @@ config.json
 
 # ignore scripts
 *.sh
+
+# ignore vim .swo .swp
+*.swo
+*.swp

@@ -1,4 +1,6 @@
 {
   "discordToken": "REPLACE_THIS_WITH_YOUR_DISCORD_BOT_TOKEN",
-  "commandPrefix": "!"
+  "commandPrefix": "!",
+  "eventsPath": "./events/",
+  "commandsPath": "./commands/"
 }
