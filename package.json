@@ -7,8 +7,8 @@
   "author": "lazukr <peterh10201@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "NODE_ENV=production node ro-bot.js",
-    "dev-start": "NODE_ENV=development node ro-bot.js"
+    "start": "NODE_ENV=production node ./src/index.js",
+    "dev-start": "NODE_ENV=development node ./src/index.js"
   },
   "dependencies": {
     "discord.js": "^11.2.1",

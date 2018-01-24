@@ -1,4 +1,4 @@
-const logger = require('../../logger.js')('General module: dice');
+const logger = require('logger.js')('General module: dice');
 exports.run = async (discordBot, message, args) => {
   const intArgs = args.filter(string => {
     return !isNaN(string) && parseInt(string) > 0;

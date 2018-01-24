@@ -1,4 +1,4 @@
-const logger = require('../logger.js')("Event Module: Message");
+const logger = require('logger.js')("Event Module: Message");
 module.exports = (discordBot, message) => {
   // ignore bots
   if (message.author.bot) return;
