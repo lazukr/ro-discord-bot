@@ -1,6 +1,9 @@
 {
-  "discordToken": "REPLACE_THIS_WITH_YOUR_DISCORD_BOT_TOKEN",
+  "discordToken": "REPLACE_WITH_YOUR_ID/TOKEN/CREDENTIALS",
   "commandPrefix": "!",
   "eventsPath": "./events/",
-  "commandsPath": "./commands/"
+  "commandsPath": "./commands/",
+  "divinePrideToken": "REPLACE_WITH_YOUR_ID/TOKEN/CREDENTIALS",
+  "novaUsername": "REPLACE_WITH_YOUR_ID/TOKEN/CREDENTIALS",
+  "novaPassword": "REPLACE_WITH_YOUR_ID/TOKEN/CREDENTIALS"
 }
