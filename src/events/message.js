@@ -10,7 +10,7 @@ module.exports = (discordBot, message) => {
   const command = discordBot.commandList.get(commandKey);
   if (!command) {
     logger.debug(`${commandKey} was not loaded or not found.`);
-    message.channel.send(`${commandKey} was not loaded or not found. Please use \`${discordBot.config.commandPrefix}commands\` to see a list of the commands`);
+    message.channel.send(`${commandKey} was not loaded or not found. Please use \`${discordBot.config.commandPrefix}command\` to see a list of the commands`);
     return;
   }
   logger.info(`${message.author.username}(${message.author.id}) ran command ${command.cmd.info.name} with arguments: ${args}`);
