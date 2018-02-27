@@ -1,8 +1,9 @@
 const Discord = require('discord.js');
 const CONFIG = require('./config.json');
-const LOGGER = require('./logger.js');
+const LOGGER = require('logger.js');
 const util = require('util');
 const fs = require('fs');
+const path = require('path');
 const Enmap = require('enmap');
 const readdir = util.promisify(fs.readdir);
 
@@ -15,11 +16,12 @@ class RagnarokBot {
   }
 
   async loadEvents() {
-    const eventFiles = await this._loadFiles(this.config.eventsPath);
+    var eventsPath = path.resolve(__dirname, `${this.config.eventsPath}`);
+    const eventFiles = await this._loadFiles(eventsPath);
     this.logger.info(`Loading ${eventFiles.length} event modules... (${eventFiles})`);
     eventFiles.forEach(file => {
       const eventName = file.split('.')[0];
-      const eventFunction = require(`${this.config.eventsPath}${file}`);
+      const eventFunction = require(`${eventsPath}/${file}`);
       this.client.on(eventName, eventFunction.bind(null, this));
       this.logger.debug(`${file} loaded successfully.`);
     });
@@ -27,14 +29,15 @@ class RagnarokBot {
   }
 
   async loadCommands() {
-    const folders = await this._getFolders(this.config.commandsPath);
+    var commandsPath = path.resolve(__dirname, `${this.config.commandsPath}`);
+    const folders = await this._getFolders(commandsPath);
     this.logger.debug(`Loading ${folders.length} folder(s). (${folders})`);
     for (let folder of folders) {
       this.logger.info(`Loading Commands from the ${folder} folder...`);
-      const commandFiles = await this._loadFiles(`${this.config.commandsPath}${folder}`);
+      const commandFiles = await this._loadFiles(`${commandsPath}/${folder}`);
       this.logger.info(`Loading ${commandFiles.length} command module(s)... (${commandFiles})`);
       commandFiles.forEach(file => {
-        this._addCommand(`${this.config.commandsPath}${folder}/${file}`);
+        this._addCommand(`${commandsPath}/${folder}/${file}`);
       });
       this.logger.info(`Commands loaded successfully`);
     }
@@ -75,7 +78,7 @@ class RagnarokBot {
    _getFolders(folderPath) {
     return readdir(folderPath)
       .then(list => {
-        return list.filter(file => fs.lstatSync(`${folderPath}${file}/`).isDirectory());
+        return list.filter(file => fs.lstatSync(`${folderPath}/${file}/`).isDirectory());
       }).catch(err => {
         this.logger.error(err);
       });

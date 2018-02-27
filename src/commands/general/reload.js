@@ -1,4 +1,4 @@
-const logger = require('../../logger.js')("Command module: reload");
+const logger = require('logger.js')("Command module: reload");
 const Enmap = require('enmap');
 
 exports.run = async (discordBot, message, args) => {
