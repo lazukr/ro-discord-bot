@@ -14,5 +14,5 @@ exports.info = {
   name: "sig",
   category: "Nova",
   description: "creates a signature for Nova RO characters. #/# indicates the background and pose respectively. Background goes from 0 - 10, pose goes from 0 - 12.",
-  usage: "<cmd_prefix>sig #/#",
+  usage: "@sig #/#",
 };

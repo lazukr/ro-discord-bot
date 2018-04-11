@@ -8,5 +8,5 @@ exports.info = {
   name: "ping",
   category: "general",
   description: "pings message and API",
-  usage: "<cmd_prefix>ping",
+  usage: "@ping",
 };

@@ -18,7 +18,7 @@ exports.info = {
   name: "dice",
   category: "general",
   description: "roles n dices of m sides, default: n = 1, m = 6",
-  usage: "\`<cmd_prefix>dice n m\`. n and m must be integers.",
+  usage: "@dice n m. n and m must be integers.",
 };
 
 function rollDice(max) {
