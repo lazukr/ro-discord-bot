@@ -88,10 +88,15 @@ class RagnarokBot {
     this.logger.info('Starting ro-discord-bot...');
     this.client.login(this.config.discordToken);
   }
+
+  rename(name) {
+    this.client.on('ready', () => {
+      this.client.user.setUsername(name);
+    });
+  }
 };
 
 roBot = new RagnarokBot(LOGGER, CONFIG);
 roBot.loadEvents();
 roBot.loadCommands();
 roBot.start();
-
