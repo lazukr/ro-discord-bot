@@ -87,6 +87,12 @@ class RagnarokBot {
   start() {
     this.logger.info('Starting ro-discord-bot...');
     this.client.login(this.config.discordToken);
+    this.client.on('disconnect', dis => {
+      this.logger.info(dis);
+    });
+    this.client.on('error', err => {
+      this.logger.error(err);
+    });
   }
 
   rename(name) {
