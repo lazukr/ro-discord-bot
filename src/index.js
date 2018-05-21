@@ -95,7 +95,7 @@ class RagnarokBot {
     });
 
     this.client.on('error', err => {
-      this.logger.error(err);
+      this.logger.error(`${err.name}: ${err.message}`);
       this.logger.info("attempting to restart bot...");
       this.client.destroy()
         .then(() => {
