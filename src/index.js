@@ -89,6 +89,22 @@ class RagnarokBot {
     this.client.login(this.config.discordToken);
   }
 
+  startListeners() {
+    this.client.on('disconnect', dis => {
+      this.logger.info(dis);
+    });
+
+    this.client.on('error', err => {
+      this.logger.error(`${err.name}: ${err.message}`);
+      this.logger.info("attempting to restart bot...");
+      this.client.destroy()
+        .then(() => {
+          this.start();       
+      });
+    });
+  }
+
+
   rename(name) {
     this.client.on('ready', () => {
       this.client.user.setUsername(name);
@@ -100,3 +116,4 @@ roBot = new RagnarokBot(LOGGER, CONFIG);
 roBot.loadEvents();
 roBot.loadCommands();
 roBot.start();
+roBot.startListeners();
