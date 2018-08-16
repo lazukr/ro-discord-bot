@@ -213,19 +213,17 @@ exports.run = async (discordBot, message, args) => {
   parsedTable.unshift(`${vendFormattedTableHeader.join(' | ')}`, `${vendSeparator.join('-+-')}`);
 
   // get info on row lengths and number of row to help calculate the number of rows per message (if applicable) to send off in one message 
-  const rowLength = parsedTable[0].length;
+  const rowLength = parsedTable[0].length + 1;
   const numOfRows = parsedTable.length;
-
   // when total message is less than 2000 characters, we can send it in one message
   if (rowLength * numOfRows < MSG_LIM) {
-    message.channel.send(embedReply);
+    //message.channel.send(embedReply);
     message.channel.send(`\`\`\`${parsedTable.join("\n")}\`\`\``);
     return;
   }
  
   // calculates the threshold 
   const thresholdCount = MSG_LIM / rowLength;
-  
   // create a multi message that takes in the number of rows dictated by the threshold
   let multiMsg = [];
   while(parsedTable.length) {
@@ -233,7 +231,7 @@ exports.run = async (discordBot, message, args) => {
   }
   
   // sends each message
-  message.channel.send(embedReply);
+  //message.channel.send(embedReply);
   multiMsg.forEach(msg => {
     message.channel.send(`\`\`\`${msg.join("\n")}\`\`\``);
   }); 
