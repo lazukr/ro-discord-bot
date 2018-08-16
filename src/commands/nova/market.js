@@ -143,7 +143,7 @@ exports.run = async (discordBot, message, args) => {
 
   // no result case
   if (!vendInitial || Object.keys(vendInitial).length == 0) {
-    message.channel.send(embedReply);
+    //message.channel.send(embedReply);
     message.channel.send("\`\`\`:( No Items Founds.\`\`\`");
     return; 
   }
