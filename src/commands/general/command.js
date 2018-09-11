@@ -20,6 +20,7 @@ exports.run = async (discordBot, message, args) => {
   const usageString = cmdInfo.usage.replace("@", cmdSymbol);
    
   await message.channel.send( `name: \`${cmdInfo.name}\` \n` +
+                              `alias: \`${cmdInfo.alias ? cmdInfo.alias : "none"}\` \n` 
                               `category: \`${cmdInfo.category}\` \n` +
                               `description: \`${cmdInfo.description}\` \n` +
                               `usage: \`${usageString}\``);
@@ -27,6 +28,7 @@ exports.run = async (discordBot, message, args) => {
 
 exports.info = {
   name: "command",
+  alias: "cmd",
   category: "general",
   description: "use this to get info on all commands",
   usage:  "\`@command\` to list out all commands \n" +
