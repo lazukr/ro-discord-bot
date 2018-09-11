@@ -4,6 +4,7 @@ const mobType = dpapi.types.mob;
 
 exports.info = {
   name: "mob",
+  alias: "ms",
   category: "Divine Pride",
   description: "Gets information of a mob from the divine pride database. Displays limited information, but provides link to divine pride's mob database for the rest.",
   usage: "@mob <mob_id>",

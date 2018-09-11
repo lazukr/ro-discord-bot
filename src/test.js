@@ -1,34 +1,30 @@
+// packages
 const fs = require('fs');
-const market = require('nova-market-commons');
-const dpapi = require('divine-pride-api');
-const config = require('./config.json'); 
-const mobTestID = 1002;
-const logger = require('logger.js')("Test module: ");
 const cheerio = require('cheerio');
 const rp = require('request-promise');
+
+// configuration
+const config = require('./config.json'); 
+
+// custom files
+const logger = require('logger.js')("Test module: ");
+const market = require('nova-market-commons');
+const dpapi = require('divine-pride-api');
+const Scheduler = require('task-scheduler');
+
+// constants
+const mobTestID = 1002;
 const url = 'https://www.novaragnarok.com';
-const scheduler = require('node-schedule');
-const uuidv5 = require('uuid/v5');
-const uuidv4 = require('uuid/v4');
 const QTY = 'Qty';
 const PRICE = 'Price';
 const MSG_LIM = 2000;
+const TEST_STORAGE = 'src/testdb';
+
 
 const market_qs = {
   "module": "vending",
   "action": "item",
 };
-
-//const url = dpapi.getAPILink(dpapi.types.mob.apiName, mobTestID);
-//console.log(url + `?apiKey=${config.divinePrideToken}`);
-
-//const result = dpapi.getJSONReply(url, config.divinePrideToken);
-
-
-
-
-
-//console.log(result);
 
 async function testMarket() {
   const itemID = "22010";
@@ -128,111 +124,6 @@ function commandParser(input) {
 // ------------------------- SCHEDULER TEST
 //
 
-// this denotes a delay in the reminder system
-// e.g. *in* 5 hours.
-function inDurationDatetime(timeArgs) {
-  const remindDate = new Date();
-  // time regex object
-  const durationRegexObj = {
-    second: "\\ssec(ond)?(s)?",
-    minute: "\\smin(ute)?(s)?",
-    hour:   "\\sh(ou)?r(s)?",
-    day:    "\\sday(s)?",
-    week:   "\\sw(ee)?k(s)?",
-  };
- 
-  const duration = getDurationObj(durationRegexObj, timeArgs);
-  remindDate.setSeconds(remindDate.getSeconds() + duration.second);
-  remindDate.setMinutes(remindDate.getMinutes() + duration.minute);
-  remindDate.setHours(remindDate.getHours() + duration.hour);
-  remindDate.setDate(remindDate.getDate() + duration.day);
-  remindDate.setDate(remindDate.getDate() + duration.week * 7);
-  return remindDate;
-}
-
-function getDurationObj(regexObj, args) {
-  
-  // any amount of digits, duration does not care
-  const inDigitRegex = "\\s\\d+";
-
-  // returns object of the duration result of each time unit.
-  // if not found, that time unit will be 0 instead.
-  return Object.keys(regexObj)
-    .reduce((result, value) => {
-      const curExp = new RegExp(inDigitRegex + regexObj[value]);
-      const match = args.match(curExp);
-      result[value] = match
-        ? parseInt(match[0])
-        : 0;
-      return result;
-    }, {});
-}
-
-
-
-// this denotes a specific datetime for the reminder
-// e.g. *at* :3ndex: 2, input: 'in 1 hr' ]
-//
-function atSpecificDatetime(args) {
-
-}
-
-
-ARGS = 0;
-TIME = 1;
-RECUR = 2;
-
-
-const inRegex = /^[iI][nN]\s/;
-const atRegex = /^[aA][tT]\s|^[@]\s/;
-
-
-
-
-function getTaskObj(args) {
-  const cmdString = args.join(' ').split(',').map(arg => arg.trim());
-  const scheduled = cmdString[TIME]; 
-
-  let remindAt;
-  if (inRegex.test(scheduled)) {
-    remindAt = inDurationDatetime(scheduled);
-  } 
-
-  if (atRegex.test(scheduled)) {
-  }
-  
-  return {
-    id: uuidv5(args.join(' '), uuidv4()),
-    task: {
-      owner: "",
-      type: "",
-      args: cmdString[ARGS],
-      issued: new Date(),
-      scheduled: remindAt,
-      recur: cmdString[RECUR],
-    },
-  };
-
-
-
-  //const currentReminderList = JSON.parse(fs.readFileSync('./src/schedules.json'));
-  //console.log(currentReminderList);
-  //fs.writeFileSync('./src/schedules.json', JSON.stringify(list));
-}
-
-function readScheduledJSON() {
-  const read = fs.readFileSync('./src/schedules.json');
-  try {
-    return JSON.parse(read);
-  } catch (err) {
-    return [];
-  }
-}
-
-function writeScheduledJSON(schedule) {
-  fs.writeFileSync('./src/schedules.json', JSON.stringify(schedule));
-}
-
 const listArgs = [
   "actual test, in 2 seconds",
   "combined test, in 3 hrs 45 min",
@@ -247,14 +138,19 @@ const listArgs = [
   "written minute, in 1 minute",
 ];
 
-function schedulerTest() {
-  const currentTaskList = readScheduledJSON();
-  
-  console.log(currentTaskList);
+function taskprocessor(data) {
+  console.log('hi');
+}
+
+async function schedulerTest() {
+  const scheduler = new Scheduler(TEST_STORAGE, taskprocessor); 
+  await scheduler.init();
   const splitArgs = listArgs.map(test => test.split(' '));
-  const schedule = splitArgs.map(args => getTaskObj(args));
-  console.log(schedule);
-  writeScheduledJSON(schedule);
+  splitArgs.forEach(async (args) => {
+    await scheduler.add('channel', 'me', 'message', args);
+  });
+  const list = await scheduler.getList();
+  console.log(list); 
 }
 
 schedulerTest();

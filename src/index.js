@@ -1,20 +1,30 @@
 const Discord = require('discord.js');
-const CONFIG = require('./config.json');
-const LOGGER = require('logger.js');
 const util = require('util');
 const fs = require('fs');
 const path = require('path');
 const Enmap = require('enmap');
+
 const readdir = util.promisify(fs.readdir);
+const CONFIG = require('./config.json');
+const LOGGER = require('logger.js');
+const Scheduler = require('task-scheduler.js');
+const taskHandler = require('task-handler.js');
+// bot constants
+const LIVE_STORAGE = 'src/liveSchedulerDB';
 
 class RagnarokBot {
   constructor(logger, config) {
     this.logger = logger("Ragnarok Bot");
     this.config = config;
     this.commandList = new Enmap();
+    this.commandAliasList = new Enmap();
     this.client = new Discord.Client();
+    this.scheduler = new Scheduler(LIVE_STORAGE, taskHandler.messageHandler);
   }
 
+  // loads all events that the bot can handle.
+  // this is a complicated set of code to load the only current event
+  // message
   async loadEvents() {
     var eventsPath = path.resolve(__dirname, `${this.config.eventsPath}`);
     const eventFiles = await this._loadFiles(eventsPath);
@@ -27,7 +37,9 @@ class RagnarokBot {
     });
     this.logger.info(`Events loaded`);
   }
-
+  
+  // loads all the commands
+  // they are structured weirdly in that they are categorized in folders
   async loadCommands() {
     var commandsPath = path.resolve(__dirname, `${this.config.commandsPath}`);
     const folders = await this._getFolders(commandsPath);
@@ -49,6 +61,14 @@ class RagnarokBot {
       cmd: command,
       path: commandPath,
     });
+    
+    if (command.info.alias) {
+      this.commandAliasList.set(command.info.alias, {
+        cmd: command,
+        path: commandPath,
+      });
+    }
+
     this.logger.debug(`(${command.info.name}) module loaded successfully.`);
   }
 
@@ -84,12 +104,14 @@ class RagnarokBot {
       });
    }
 
-  start() {
+  async start() {
     this.logger.info('Starting ro-discord-bot...');
-    this.client.login(this.config.discordToken);
+    await this.client.login(this.config.discordToken);
+    this.logger.info('Starting scheduler...');
+    this.scheduler.init(this.client);
   }
 
-  startListeners() {
+  async startListeners() {
     this.client.on('disconnect', dis => {
       this.logger.info(dis);
     });
@@ -98,12 +120,11 @@ class RagnarokBot {
       this.logger.error(`${err.name}: ${err.message}`);
       this.logger.info("attempting to restart bot...");
       this.client.destroy()
-        .then(() => {
-          this.start();       
+        .then(async () => {
+          await this.start();       
       });
     });
   }
-
 
   rename(name) {
     this.client.on('ready', () => {
@@ -112,8 +133,12 @@ class RagnarokBot {
   }
 };
 
-roBot = new RagnarokBot(LOGGER, CONFIG);
-roBot.loadEvents();
-roBot.loadCommands();
-roBot.start();
-roBot.startListeners();
+async function botboot() {
+  const roBot = new RagnarokBot(LOGGER, CONFIG);
+  await roBot.loadEvents();
+  await roBot.loadCommands();
+  await roBot.start();
+  await roBot.startListeners();
+}
+
+botboot();

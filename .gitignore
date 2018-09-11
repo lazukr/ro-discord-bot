@@ -67,3 +67,7 @@ config.json
 
 # ignore vim .sw files
 *.sw*
+
+# ignore testdb
+src/testdb/
+src/testdb/*
