@@ -106,7 +106,7 @@ class RagnarokBot {
 
   async start() {
     this.logger.info('Starting ro-discord-bot...');
-    await this.client.login(this.config.discordToken);
+    await this.client.login(this.config.discordToken).catch(console.error);
     this.logger.info('Starting scheduler...');
     this.scheduler.init(this.client);
   }

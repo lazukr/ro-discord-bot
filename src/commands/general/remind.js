@@ -1,4 +1,12 @@
 const logger = require('logger.js')("Command module: scheduler");
+const moment = require('moment-timezone');
+const storage = require('node-persist');
+const userdir = 'src/userdb';
+const userdb = storage.create();
+
+userdb.init({
+  dir: userdir, 
+});
 
 exports.run = async (discordBot, message, args) => {
 
@@ -29,8 +37,12 @@ exports.run = async (discordBot, message, args) => {
     message.channel.send(`Failed to add message, perhaps add an \`in\` clause or \`at\` clause. Refer to the description`);
     return;
   }
+  
+  const timezone = await userdb.getItem(message.author.id);
+  const scheduled = new Date(scheduledItem.scheduled);
+  const localTime = moment(scheduled).tz(timezone).calendar(); 
 
-  message.channel.send(`Message successfully added and will remind you at ${scheduledItem.scheduled}`);  
+  message.channel.send(`Message successfully added and you will be reminded ${localTime}`);  
 
 };
 

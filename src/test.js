@@ -153,4 +153,9 @@ async function schedulerTest() {
   console.log(list); 
 }
 
-schedulerTest();
+
+// ----------------------- moment testing
+
+const moment = require('moment-timezone');
+const currentDate = new Date();
+console.log(moment(currentDate).tz("America/Toronto").calendar());
