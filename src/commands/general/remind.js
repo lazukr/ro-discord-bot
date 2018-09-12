@@ -4,6 +4,19 @@ const storage = require('node-persist');
 const userdir = 'src/userdb';
 const userdb = storage.create();
 
+
+moment.locale('en', {
+  calendar : {
+    lastDay : '[Yesterday at] LT',
+    sameDay : '[Today at] LT',
+    nextDay : '[Tomorrow at] LT',
+    lastWeek : '[on last] dddd [at] LT',
+    nextWeek : '[on] dddd [at] LT',
+    sameElse : '[on] llll'
+  }
+});
+
+
 userdb.init({
   dir: userdir, 
 });
@@ -41,7 +54,9 @@ exports.run = async (discordBot, message, args) => {
   const timezone = await userdb.getItem(message.author.id);
   const scheduled = new Date(scheduledItem.scheduled);
   const localTime = moment(scheduled).tz(timezone).calendar(); 
-
+  
+  logger.info(`Message set to go off at ${scheduledItem.scheduled}(${localTime})`);
+    
   message.channel.send(`Message successfully added and you will be reminded ${localTime}`);  
 
 };
