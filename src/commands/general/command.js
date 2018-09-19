@@ -10,7 +10,8 @@ exports.run = async (discordBot, message, args) => {
     return;
   }
 
-  const cmd = discordBot.commandList.get(args[0]);
+  const cmd = discordBot.commandList.get(args[0]) ||
+              discordBot.commandAliasList.get(args[0]);
   if (!cmd) {
     await message.channel.send(`The command ${args[0]} does not exist.`);
     return;
@@ -18,12 +19,14 @@ exports.run = async (discordBot, message, args) => {
 
   const cmdInfo = cmd.cmd.info;
   const usageString = cmdInfo.usage.replace("@", cmdSymbol);
-   
-  await message.channel.send( `name: \`${cmdInfo.name}\` \n` +
-                              `alias: \`${cmdInfo.alias ? cmdInfo.alias : "none"}\` \n` 
-                              `category: \`${cmdInfo.category}\` \n` +
-                              `description: \`${cmdInfo.description}\` \n` +
-                              `usage: \`${usageString}\``);
+  
+  const msg = `\`\`\`name: ${cmdInfo.name}\n\
+alias: ${cmdInfo.alias ? cmdInfo.alias : "none"}\n\
+category: ${cmdInfo.category}\n\
+description: ${cmdInfo.description}\n\
+usage: ${usageString}\`\`\``;
+
+  await message.channel.send(msg);
 };
 
 exports.info = {

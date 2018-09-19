@@ -11,6 +11,8 @@ const logger = require('logger.js')("Test module: ");
 const market = require('nova-market-commons');
 const dpapi = require('divine-pride-api');
 const Scheduler = require('task-scheduler');
+const marketCmd = require('./commands/nova/market.js');
+const storage = require('node-persist');
 
 // constants
 const mobTestID = 1002;
@@ -19,107 +21,30 @@ const QTY = 'Qty';
 const PRICE = 'Price';
 const MSG_LIM = 2000;
 const TEST_STORAGE = 'src/testdb';
+const SETTINGS_STORAGE = 'src/settings';
+const AUTOMARKET_DB = 'src/automarket';
 
+const settings = storage.create();
+settings.init({
+  dir: SETTINGS_STORAGE,
+});
+
+const amdb = storage.create();
+
+amdb.init({
+  dir: AUTOMARKET_DB,
+});
 
 const market_qs = {
   "module": "vending",
   "action": "item",
 };
 
-async function testMarket() {
-  const itemID = "22010";
+async function testMarket(itemID) {
   const result = await market.getLiveMarketData(itemID); 
-  if (!result.header) {
-    return;
-  }
+  console.log(result);
 
-  if (result.header[QTY]) {
-    result.table = getStringIntsInCol(result.table, QTY);
-  }
-
-  result.table = getStringIntsInCol(result.table, PRICE);
-
-  result.table.unshift(result.header);
-  paddedTable = formatTable(result.header, result.table);
-  
-  const rowLength = paddedTable[0].length + 1;
-  const numRows = paddedTable.length;
-
-  if (rowLength * numRows < MSG_LIM) {
-    console.log(paddedTable.join("\n"));
-    return;
-  }
-
-  const threshold = MSG_LIM / rowLength;
-
-  const multiMessage = [];
-  while(paddedTable.length) {
-    multiMessage.push(paddedTable.splice(0, threshold)); 
-  }
-
-  multiMessage.forEach(msg => {
-    console.log(msg.join("\n"));
-  });
-  return;
 }
-
-// joins every item in the row into one string
-function stringifyTable(table) {
-  return table.map(row => {
-    return Object.values(row).join(' | ');
-  }); 
-}
-
-// creates a separator to divide the header from
-// the actual table content
-function getTableSeparator(headerList, padValues) {
-  return headerList.reduce((result, value) => {
-    result[value] = '-'.repeat(padValues[value]);
-    return result;
-  }, {});
-}
-
-// converts integer columns back to strings
-// inserts the commas (,) for thousands separating
-function getStringIntsInCol(array, col) {
-  return array.map(row => {
-    row[col] = row[col].toLocaleString();
-    return row;
-  });
-}
-
-// formats the table to be in a printable form
-function formatTable(header, table) {
-  const headerList = Object.keys(header);
-  const tablePadValues = getDictOfMaxStrInCols(headerList, table);
-  const tableSeparator = getTableSeparator(headerList, tablePadValues);
-  
-  // inserts the header / table separator 
-  table.splice(1, 0, tableSeparator);
-  const paddedTable = table.map(row => {
-    return headerList.reduce((result, value) => {
-      result[value] = row[value].padEnd(tablePadValues[value]);
-      return result; 
-    }, {});  
-  });
-  return stringifyTable(paddedTable);
-}
-
-// gets max string length in each column
-// returns as dictionary
-function getDictOfMaxStrInCols(headerList, table) {
-  return headerList.reduce((result, value) => {
-    result[value] = Math.max(...(table.map(col => {
-      return col[value].length;
-    })));
-    return result; 
-  }, {});
-}
-
-function commandParser(input) {
-  return input.split();
-}
-
 
 // ------------------------- SCHEDULER TEST
 //
@@ -156,6 +81,52 @@ async function schedulerTest() {
 
 // ----------------------- moment testing
 
-const moment = require('moment-timezone');
-const currentDate = new Date();
-console.log(moment(currentDate).tz("America/Toronto").calendar());
+//const moment = require('moment-timezone');
+//const currentDate = new Date();
+//console.log(moment(currentDate).tz("America/Toronto").calendar());
+//
+
+// ---------------------- automarket checker
+
+async function automarket(itemID, price) {
+  if (isNaN(price)) {
+    console.log("Price must be a number");
+    return;
+  }
+  const results = await market.getLiveMarketData(itemID); 
+  
+  if (!results) {
+    console.log("No results!");
+    return;
+  }
+  console.log(results);
+  const filteredResults = results.table.filter(entry => entry.Price <= price);
+  
+  if (filteredResults.length == 0) {
+    console.log("No matching results");
+    return;
+  }
+  
+  console.log(filteredResults);
+}
+
+async function setAutoMarketInterval(interval) {
+  
+  const cronInterval = `*/${interval} * * * *`;
+  await settings.setItem('automarket-interval', cronInterval);
+  const value = await settings.getItem('automarket-interval'); 
+  const len = await settings.length();
+  
+  console.log(value, len);
+}
+
+async function AutoMarketScheduler() {
+  
+
+
+}
+
+
+
+
+
