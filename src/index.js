@@ -8,7 +8,6 @@ const readdir = util.promisify(fs.readdir);
 const CONFIG = require('./config.json');
 const LOGGER = require('logger.js');
 const Scheduler = require('task-scheduler.js');
-const taskHandler = require('task-handler.js');
 // bot constants
 const LIVE_STORAGE = 'src/liveSchedulerDB';
 
@@ -19,7 +18,7 @@ class RagnarokBot {
     this.commandList = new Enmap();
     this.commandAliasList = new Enmap();
     this.client = new Discord.Client();
-    this.scheduler = new Scheduler(LIVE_STORAGE, taskHandler.messageHandler);
+    this.scheduler = new Scheduler(LIVE_STORAGE);
   }
 
   // loads all events that the bot can handle.
