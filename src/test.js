@@ -13,6 +13,7 @@ const dpapi = require('divine-pride-api');
 const Scheduler = require('task-scheduler');
 const marketCmd = require('./commands/nova/market.js');
 const storage = require('node-persist');
+const TaskFactory = require('task-factory');
 
 // constants
 const mobTestID = 1002;
@@ -126,7 +127,22 @@ async function AutoMarketScheduler() {
 
 }
 
+// test factory
+//
 
+const testString = "rsx 102 343 in 2 hrs".split(' ');
+const secondstr = "rsasdfsd in 2 hrs in 5 hrs".split(' ');
 
+const prop = {
+  channel: "2342394293492342340232",
+  owner: "Bob",
+  ownerid: "203402340239235923523",
+  type: "message",
+  args: secondstr, 
+}
+
+taskFact = new TaskFactory.TaskFactory();
+const task = taskFact.makeTask(prop);
+console.log(task);
 
 
