@@ -44,7 +44,7 @@ exports.run = async (discordBot, message, args) => {
   const scheduledItem = await discordBot.scheduler.add(props);
 
   if (!scheduledItem) {
-    message.channel.send(`Failed to add message, perhaps add an \`in\` clause. Refer to the description`);
+    message.channel.send(`Failed to add message, perhaps add an \`in\` clause or have valid times after the \`in\` clause. Refer to the description`);
     return;
   }
   
