@@ -1,28 +1,23 @@
-const dpapi = require('divine-pride-api.js');
+const dp = require('divine-pride-commons.js');
 const logger = require('logger.js')("Divine Pride Item Module");
-const itemType = dpapi.types.item;
-
 exports.info = {
   name: "item",
-  alias: "is",
+  alias: "ii",
   category: "Divine Pride",
-  description: "Gets information of an item from the divine pride database.",
+  description: "Gets information of an item from the divine pride database. Currently only supports using an id.",
   usage: "@item <item_id>",
 };
 
 exports.run = async (discordBot, message, args) => {
-  const apiKey = discordBot.config.divinePrideToken;
-  const jsonReply = await dpapi.getApiJSON(message, args, apiKey, itemType.apiName);
+  
+  logger.info(args);
+  const item = await dp.getItem(args);
 
-  if (!jsonReply || jsonReply.name == null) {
-    const notlikeblob = discordBot.client.emojis.find("name", "notlikeblob");
-    message.channel.send(`Bear has no data on this. ${notlikeblob}`);
+  if (item.error > 0) {
+    message.channel.send(`\`\`\`${dp.getErrorMessage(item.error)}\`\`\``);
     return;
   }
 
-  logger.info(`Requested item: ${jsonReply.name}, ${jsonReply.id}`);
-  
-  logger.info(JSON.stringify(jsonReply, null, 2));
-
+  message.channel.send(`\`\`\`${dp.itemPrint(item)}\`\`\``);
 };
 

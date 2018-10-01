@@ -8,12 +8,13 @@ const config = require('./config.json');
 
 // custom files
 const logger = require('logger.js')("Test module: ");
-const market = require('nova-market-commons');
-const dpapi = require('divine-pride-api');
+const nvro = require('nova-market-commons');
+const dp = require('divine-pride-commons');
 const Scheduler = require('task-scheduler');
 const marketCmd = require('./commands/nova/market.js');
 const storage = require('node-persist');
 const TaskFactory = require('task-factory');
+const pp = require('pretty-print');
 
 // constants
 const mobTestID = 1002;
@@ -42,8 +43,28 @@ const market_qs = {
 };
 
 async function testMarket(itemID) {
-  const result = await market.getLiveMarketData(itemID); 
-  console.log(result);
+  const market = await nvro.getLiveMarketData(itemID); 
+  
+  if (market.error = nvro.ERROR.UNKNOWN) {
+    console.log("Unknown");
+  }
+
+  if (market.error = nvro.ERROR.NO_RESULT) {
+    console.log("No Result");
+  }
+
+  market.table.intToStrCols(nvro.HEADERS.QTY);
+  market.table.intToStrCols(nvro.HEADERS.PRICE);
+
+  const prettyTable = new pp.PrettyTable(market);
+  //prettyTable.print();
+  
+  for (i = 1; i <= prettyTable.pages; i++) {
+    const msg = prettyTable.getMessage(i);
+    console.log(msg);
+  }
+
+  //console.log(result);
 
 }
 
@@ -141,8 +162,35 @@ const prop = {
   args: secondstr, 
 }
 
-taskFact = new TaskFactory.TaskFactory();
-const task = taskFact.makeTask(prop);
-console.log(task);
+// test dp commons
+
+const itemTestlist = [
+  "22010",
+  "6607",
+  "asdfadf",
+  "a213",
+  "12.234",
+  "32,asdf",
+  "1002",
+];
+
+function testdp(list) {
+  list.forEach(async test => {
+    const mob = await dp.getMob(test);
+  });
+}
+
+//testdp(itemTestlist);
+
+testMarket(22010);
+testMarket(6607);
+
+
+
+
+
+
+
+
 
 
