@@ -2,67 +2,136 @@ const logger = require('logger.js')("Nova Command module: market");
 const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
 
-// constants
-const QTY = 'Qty';
-const PRICE = 'Price';
-const MSG_LIM = 2000;
-const HIGHLIGHT = 'JSON';
+const TIME_INTERVAL = 300000; // every 5 minutes
+const REFINE_FINDER = /^(>|<)?\+\d{1,2}$/;
+const PAGE_FINDER = /^p\d{1,2}$/;
+
+const PREV_QUERIES = {};
+let LAST_QUERY = 0;
 
 exports.run = async (discordBot, message, args) => {
-  
-  // no input
-  if (args.length === 0) {
+  console.log(args);
+
+  if (args.length === 0) {          // 0 length case
     message.channel.send("Need to specify an id.");
-    return;
-  }
-
-  const itemId = parseInt(args);
-
-  // not positive integer case
-  if (isNaN(itemId) || itemId < 1) {
-    message.channel.send("Id needs to be a positive integer.");
-    return;
-  }
-
-  // get market data
-  const marketData = await nvro.getLiveMarketData(itemId);
-
-  if (!marketData.table) {
-    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${marketData.name}\n\nNo Results Found :(\`\`\``);
-    return;
-  }
-
-  if (marketData.header[pp.QTY]) {
-    marketData.table = pp.getStringIntsInCol(marketData.table, pp.QTY);
-  }
   
-  marketData.table = pp.getStringIntsInCol(marketData.table, pp.PRICE);
-  prettyTable = pp.print(marketData.header, marketData.table, true);
-
-  console.log(prettyTable);
+  } else if (args.length === 1) {   // 1 length case
+    if (isNaN(args)) {
+      doSearch(message, args);           // search case
+      return;
+    }
+    doItemId(message, args);             // get item case
   
-  if (prettyTable.firstMsg) {
-    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${marketData.name}\n\n\n${prettyTable.firstMsg.join("\n")}\`\`\``);
+  } else {                          // > 1 length case
+    if (isNaN(args[0])) {
+      doSearch(message, args);           // search case
+      return;
+    }
+    const itemId = args.shift();
+    const filters = getFilters(args);
+    doItemId(message, itemId, filters);     // get item case
   }
-  
-  prettyTable.formatted.forEach(msg => {
-    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${msg.join("\n")}\`\`\``);
-
-  });
 };
 
-// converts integer columns back to strings
-// inserts the commas (,) for thousands separating
-function getStringIntsInCol(array, col) {
-  return array.map(row => {
-    row[col] = row[col].toLocaleString();
-    return row;
+async function doSearch(message, args) {
+  logger.info("Search");
+  message.channel.send(`\`\`\`\n Bear has not learnt how to search yet.\n \`\`\``);
+}
+
+async function doItemId(message, itemId, filters = {}) {
+  logger.info("Item");
+  itemId = parseInt(itemId);
+  let page = filters.page || 1; 
+  if (itemId < 100) {                               // last 
+    page = itemId;
+    getFromLast(message, page, filters);
+  
+  } else if (PREV_QUERIES.hasOwnProperty(itemId)) {  // previous
+    getFromPrevious(message, itemId, page, filters);
+  
+  } else {
+    getFromLive(message, itemId, page, filters);             // live
+  }
+}
+
+function getFromLast(message, page, filters) {
+  const msg = PREV_QUERIES[LAST_QUERY];
+  if (msg) {
+    logger.info("Getting from last...");
+    message.channel.send(msg.getPage(page, filters));
+    return;
+  }
+  message.channel.send(`\`\`\`\n Last query is emtpy.\n\`\`\``);
+}
+
+function getFromPrevious(message, itemId, page, filters) {
+  LAST_QUERY = itemId;
+  const msg = PREV_QUERIES[LAST_QUERY];
+  if (msg) {
+    logger.info("Getting from previous...");
+    message.channel.send(msg.getPage(page, filters));
+    return;
+  }
+  message.channel.send(`\`\`\`\n Previous query did not exist.\n\`\`\``);
+}
+
+async function getFromLive(message, itemId, page, filters) {
+  logger.info("Getting from live...");
+  
+  const market = await nvro.getLiveMarketData(itemId);
+  
+  if (market.error == nvro.ERROR.UNKNOWN) {
+    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear does not know the unknown.\`\`\``);
+    return;
+  } 
+
+  if (market.error == nvro.ERROR.NO_RESULT) {
+    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nNo Results Found :(\`\`\``);
+    return;
+  }
+  
+  market.table.intToStrCols(nvro.HEADERS.QTY);
+  market.table.intToStrCols(nvro.HEADERS.PRICE);
+  
+  prettyTable = new pp.PrettyTable(market);
+  LAST_QUERY = prettyTable.id;
+  PREV_QUERIES[LAST_QUERY] = prettyTable;
+  setTimeout(function() {
+    delete PREV_QUERIES[this.id];
+    logger.info(`Previous query: ${this.id} removed.`);
+  }.bind(prettyTable), TIME_INTERVAL);
+  
+  message.channel.send(prettyTable.getPage(page, filters));
+}
+
+function getFilters(args) {
+  
+  const refine = args.find(arg => {
+    return arg.match(REFINE_FINDER);
   });
+
+  const page = args.find(arg => {
+    return arg.match(PAGE_FINDER);
+  });
+
+  if (refine) {
+    args = args.filter(arg => arg != refine);
+  }
+
+  if (page) {
+    args = args.filter(arg => arg != page);
+  }
+
+  const filters = {};
+  filters[nvro.HEADERS.REFINE] = refine;
+  filters[nvro.HEADERS.ADDPROPS] = args;
+  filters.page = page ? parseInt(page.slice(1)) : 1;
+  return filters;
 }
 
 exports.info = {
   name: "market",
-  alias: "sv",
+  alias: "ws",
   category: "Nova",
   description: "idk yet",
   usage: "@market <item_ID>",
