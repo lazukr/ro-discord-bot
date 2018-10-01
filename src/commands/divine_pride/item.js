@@ -4,6 +4,7 @@ const itemType = dpapi.types.item;
 
 exports.info = {
   name: "item",
+  alias: "is",
   category: "Divine Pride",
   description: "Gets information of an item from the divine pride database.",
   usage: "@item <item_id>",
