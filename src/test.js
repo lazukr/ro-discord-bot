@@ -1,123 +1,148 @@
+// packages
 const fs = require('fs');
-const market = require('nova-market-commons');
-const dpapi = require('divine-pride-api');
-const config = require('./config.json'); 
-const mobTestID = 1002;
-const logger = require('logger.js')("Test module: ");
 const cheerio = require('cheerio');
 const rp = require('request-promise');
-const url = 'https://www.novaragnarok.com';
 
+// configuration
+const config = require('./config.json'); 
+
+// custom files
+const logger = require('logger.js')("Test module: ");
+const market = require('nova-market-commons');
+const dpapi = require('divine-pride-api');
+const Scheduler = require('task-scheduler');
+const marketCmd = require('./commands/nova/market.js');
+const storage = require('node-persist');
+const TaskFactory = require('task-factory');
+
+// constants
+const mobTestID = 1002;
+const url = 'https://www.novaragnarok.com';
 const QTY = 'Qty';
 const PRICE = 'Price';
 const MSG_LIM = 2000;
+const TEST_STORAGE = 'src/testdb';
+const SETTINGS_STORAGE = 'src/settings';
+const AUTOMARKET_DB = 'src/automarket';
+
+const settings = storage.create();
+settings.init({
+  dir: SETTINGS_STORAGE,
+});
+
+const amdb = storage.create();
+
+amdb.init({
+  dir: AUTOMARKET_DB,
+});
 
 const market_qs = {
   "module": "vending",
   "action": "item",
 };
 
-//const url = dpapi.getAPILink(dpapi.types.mob.apiName, mobTestID);
-//console.log(url + `?apiKey=${config.divinePrideToken}`);
-
-//const result = dpapi.getJSONReply(url, config.divinePrideToken);
-
-
-
-
-
-//console.log(result);
-
-async function testMarket() {
-  const itemID = "22010";
+async function testMarket(itemID) {
   const result = await market.getLiveMarketData(itemID); 
-  if (!result.header) {
+  console.log(result);
+
+}
+
+// ------------------------- SCHEDULER TEST
+//
+
+const listArgs = [
+  "actual test, in 2 seconds",
+  "combined test, in 3 hrs 45 min",
+  "combined test, in 5 hrs 23 min",
+  "abbreviated hours, in 3 hrs",
+  "written hours, in 3 hours",
+  "abbreviated hour, in 1 hr",
+  "written hour, in 1 hour",
+  "abbreviated minutes, in 5 mins",
+  "written minutes, in 5 minutes",
+  "abbreviated minute, in 1 min",
+  "written minute, in 1 minute",
+];
+
+function taskprocessor(data) {
+  console.log('hi');
+}
+
+async function schedulerTest() {
+  const scheduler = new Scheduler(TEST_STORAGE, taskprocessor); 
+  await scheduler.init();
+  const splitArgs = listArgs.map(test => test.split(' '));
+  splitArgs.forEach(async (args) => {
+    await scheduler.add('channel', 'me', 'message', args);
+  });
+  const list = await scheduler.getList();
+  console.log(list); 
+}
+
+
+// ----------------------- moment testing
+
+//const moment = require('moment-timezone');
+//const currentDate = new Date();
+//console.log(moment(currentDate).tz("America/Toronto").calendar());
+//
+
+// ---------------------- automarket checker
+
+async function automarket(itemID, price) {
+  if (isNaN(price)) {
+    console.log("Price must be a number");
     return;
   }
-
-  if (result.header[QTY]) {
-    result.table = getStringIntsInCol(result.table, QTY);
-  }
-
-  result.table = getStringIntsInCol(result.table, PRICE);
-
-  result.table.unshift(result.header);
-  paddedTable = formatTable(result.header, result.table);
+  const results = await market.getLiveMarketData(itemID); 
   
-  const rowLength = paddedTable[0].length + 1;
-  const numRows = paddedTable.length;
-
-  if (rowLength * numRows < MSG_LIM) {
-    console.log(paddedTable.join("\n"));
+  if (!results) {
+    console.log("No results!");
     return;
   }
-
-  const threshold = MSG_LIM / rowLength;
-
-  const multiMessage = [];
-  while(paddedTable.length) {
-    multiMessage.push(paddedTable.splice(0, threshold)); 
-  }
-
-  multiMessage.forEach(msg => {
-    console.log(msg.join("\n"));
-  });
-  return;
-}
-
-// joins every item in the row into one string
-function stringifyTable(table) {
-  return table.map(row => {
-    return Object.values(row).join(' | ');
-  }); 
-}
-
-// creates a separator to divide the header from
-// the actual table content
-function getTableSeparator(headerList, padValues) {
-  return headerList.reduce((result, value) => {
-    result[value] = '-'.repeat(padValues[value]);
-    return result;
-  }, {});
-}
-
-// converts integer columns back to strings
-// inserts the commas (,) for thousands separating
-function getStringIntsInCol(array, col) {
-  return array.map(row => {
-    row[col] = row[col].toLocaleString();
-    return row;
-  });
-}
-
-// formats the table to be in a printable form
-function formatTable(header, table) {
-  const headerList = Object.keys(header);
-  const tablePadValues = getDictOfMaxStrInCols(headerList, table);
-  const tableSeparator = getTableSeparator(headerList, tablePadValues);
+  console.log(results);
+  const filteredResults = results.table.filter(entry => entry.Price <= price);
   
-  // inserts the header / table separator 
-  table.splice(1, 0, tableSeparator);
-  const paddedTable = table.map(row => {
-    return headerList.reduce((result, value) => {
-      result[value] = row[value].padEnd(tablePadValues[value]);
-      return result; 
-    }, {});  
-  });
-  return stringifyTable(paddedTable);
+  if (filteredResults.length == 0) {
+    console.log("No matching results");
+    return;
+  }
+  
+  console.log(filteredResults);
 }
 
-// gets max string length in each column
-// returns as dictionary
-function getDictOfMaxStrInCols(headerList, table) {
-  return headerList.reduce((result, value) => {
-    result[value] = Math.max(...(table.map(col => {
-      return col[value].length;
-    })));
-    return result; 
-  }, {});
+async function setAutoMarketInterval(interval) {
+  
+  const cronInterval = `*/${interval} * * * *`;
+  await settings.setItem('automarket-interval', cronInterval);
+  const value = await settings.getItem('automarket-interval'); 
+  const len = await settings.length();
+  
+  console.log(value, len);
 }
 
+async function AutoMarketScheduler() {
+  
 
 
-testMarket();
+}
+
+// test factory
+//
+
+const testString = "rsx 102 343 in 2 hrs".split(' ');
+const secondstr = "rsasdfsd in 2 hrs in 5 hrs".split(' ');
+
+const prop = {
+  channel: "2342394293492342340232",
+  owner: "Bob",
+  ownerid: "203402340239235923523",
+  type: "message",
+  args: secondstr, 
+}
+
+taskFact = new TaskFactory.TaskFactory();
+const task = taskFact.makeTask(prop);
+console.log(task);
+
+
