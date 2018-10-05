@@ -3,7 +3,7 @@ const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
 
 const TIME_INTERVAL = 300000; // every 5 minutes
-const REFINE_FINDER = /^(>|<)?\+\d{1,2}$/;
+const REFINE_FINDER = /^(<)?\+\d{1,2}$/;
 const PAGE_FINDER = /^p\d{1,2}$/;
 
 const PREV_QUERIES = {};
@@ -58,7 +58,7 @@ function getFromLast(message, page, filters) {
   const msg = PREV_QUERIES[LAST_QUERY];
   if (msg) {
     logger.info("Getting from last...");
-    message.channel.send(msg.getPage(page, filters));
+    message.channel.send(msg.table.getPage(page, filters));
     return;
   }
   message.channel.send(`\`\`\`\n Last query is emtpy.\n\`\`\``);
@@ -69,7 +69,7 @@ function getFromPrevious(message, itemId, page, filters) {
   const msg = PREV_QUERIES[LAST_QUERY];
   if (msg) {
     logger.info("Getting from previous...");
-    message.channel.send(msg.getPage(page, filters));
+    message.channel.send(msg.table.getPage(page, filters));
     return;
   }
   message.channel.send(`\`\`\`\n Previous query did not exist.\n\`\`\``);
@@ -92,10 +92,16 @@ async function getFromLive(message, itemId, page, filters) {
   
   market.table.intToStrCols(nvro.HEADERS.QTY);
   market.table.intToStrCols(nvro.HEADERS.PRICE);
-  
+  market.table.intToStrCols(nvro.HEADERS.REFINE);
+
+  console.log(filters);
+
   prettyTable = new pp.PrettyTable(market);
   LAST_QUERY = prettyTable.id;
-  PREV_QUERIES[LAST_QUERY] = prettyTable;
+  PREV_QUERIES[LAST_QUERY] = {
+    table: prettyTable,
+    filters: filters,
+  };
   setTimeout(function() {
     delete PREV_QUERIES[this.id];
     logger.info(`Previous query: ${this.id} removed.`);
