@@ -53,9 +53,12 @@ async function testMarket(itemID) {
     console.log("No Result");
   }
 
+  console.log(market.table);
+
+
   market.table.intToStrCols(nvro.HEADERS.QTY);
   market.table.intToStrCols(nvro.HEADERS.PRICE);
-
+  /*
   const prettyTable = new pp.PrettyTable(market);
   //prettyTable.print();
   
@@ -65,7 +68,7 @@ async function testMarket(itemID) {
   }
 
   //console.log(result);
-
+  */
 }
 
 // ------------------------- SCHEDULER TEST
