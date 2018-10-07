@@ -35,6 +35,10 @@ exports.run = async (discordBot, message, args) => {
 
 async function doSearch(message, args) {
   logger.info("Search");
+
+  const search = await nvro.getSearchData(args);
+
+
   message.channel.send(`\`\`\`\n Bear has not learnt how to search yet.\n \`\`\``);
 }
 
@@ -96,7 +100,7 @@ async function getFromLive(message, itemId, page, filters) {
 
   console.log(filters);
 
-  prettyTable = new pp.PrettyTable(market);
+  prettyTable = new pp.PrettyTableFactory(market);
   LAST_QUERY = prettyTable.id;
   PREV_QUERIES[LAST_QUERY] = {
     table: prettyTable,
