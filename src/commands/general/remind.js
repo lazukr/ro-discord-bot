@@ -2,57 +2,44 @@ const logger = require('logger.js')("Command module: scheduler");
 const tf = require('task-factory.js');
 
 const ERRNUM = Object.freeze({
-  NO_ARGS: 1,
-  INVALID_INPUT: 2,
-  NOT_INT: 3,
-  FAILED_ADD: 4,
+  NAS: 1, // no args
+  NAONI: 2, // no arg or not int
+  FA: 3,
 });
 
 exports.run = async (discordBot, message, args) => {
   logger.info(args);
   
-  switch (args.length) {
-    // No Arguments Case
-    case 0:     
-      invalidInput(message, ERRNUM.NO_ARGS);
+  // No arguments
+  if (args.length === 0) {
+    invalidInput(message, ERRNUM.NAS);
+    return;
+  }
+
+  switch (args[0]) {
+    
+    // invoke --list
+    case `--${tf.CMD.LIST}`:
+      const page = parseInt(args[1]) || 1;
+      await list(message, discordBot, page);
       return;
-    // Single word command cases
-    case 1:
-      switch (args[0]) {
-        case tf.CMD.CLEAR:
-          await clear(message, discordBot);
-          return;
-        case tf.CMD.LIST:
-          await list(message, discordBot, 1);
-          return;
-        default:
-          invalidInput(message, ERRNUM.INVALID_INPUT);
-          return;
+
+    // invoke --clear
+    case `--${tf.CMD.CLEAR}`:
+      await clear(message, discordBot);
+      return;
+
+    // invoke --remove
+    case `--${tf.CMD.REMOVE}`:
+      const entry = parseInt(args[1]);
+      if (!entry) {
+        invalidInput(message, ERRNUM.NAONI);
+        return;
       }
-    // Single word command cases with argument
-    case 2:
-      switch(args[0]) {
-        case tf.CMD.LIST:
-          const page = parseInt(args[1]);
-          if (!page) {
-            invalidInput(message, ERRNUM.NOT_INT);
-            return;
-          }
-          await list(message, discordBot, page);
-          return;
-        case tf.CMD.REMOVE:
-          const entry = parseInt(args[1]);
-          if (!entry) {
-            invalidInput(message, ERRNUM.NOT_INT);
-            return;
-          }
-          await remove(message, discordBot, entry);
-          return;
-        default:
-          invalidInput(message, ERRNUM.INVALID_INPUT);
-          return;
-      }
-    // Add message case
+      await remove(message, discordBot, entry);
+      return;
+
+    // invoke message adding
     default:
       await addMessage(message, discordBot, args);
       return;
@@ -61,16 +48,13 @@ exports.run = async (discordBot, message, args) => {
 
 function invalidInput(message, errnum) {
   switch (errnum) {
-    case ERRNUM.NO_ARGS:
-      message.channel.send(`Need to Specify an argument`);
+    case ERRNUM.NAS:
+      message.channel.send(`Please specify an argument`);
       return;
-    case ERRNUM.INVALID_INPUT:
-      message.channel.send(`This is not a valid command`);
+    case ERRNUM.NAONI:
+      message.channel.send(`Please provide a positive integer argument.`);
       return;
-    case ERRNUM.NOT_INT:
-      message.channel.send(`Your argument is not a positive integer`);
-      return;
-    case ERRNUM.FAILED_ADD:
+    case ERRNUM.FA:
       message.channel.send(`Failed to add message, perhaps add an \`in\` clause or have a valid time offset after the \`in\` clause.`);
       return;
   }
@@ -88,7 +72,7 @@ async function list(message, bot, page) {
 }
 
 async function remove(message, bot, entry) {
-  const removed = await bot.scheduler.remove(tf.MSG, entry);
+  const removed = await bot.scheduler.remove(tf.TYPE.MSG, entry);
   console.log(removed);
   message.channel.send(`${removed}`);
 }
@@ -98,16 +82,14 @@ async function addMessage(message, bot, args) {
     channel: message.channel.id,
     ownerid: message.author.id,
     owner: message.author.username,
-    type: tf.MSG,
+    type: tf.TYPE.MSG,
     args: args,
   };
-  
   const scheduledItem = await bot.scheduler.add(props);
-
   if (!scheduledItem) {
-    invalidInput(message, ERRNUM.FAILED_ADD);
+    invalidInput(message, ERRNUM.FA);
+    return;
   }
-  
   const localTime = await bot.scheduler.timeLocalize(message.author.id, scheduledItem.scheduled);
   
   logger.info(`Message set to go off at ${scheduledItem.scheduled}(${localTime})`);
@@ -119,11 +101,16 @@ exports.info = {
   name: "remind",
   alias: "rmb",
   category: "general",
-  description: `Set a reminder so that the bot will automatically remind you. There are several sub commands to use. Here are an explanation of them all:
-  clear: use this to clear all message entries.
-  list: use this to list all active message entries.
-  remove <index>: remove an entry based on the index given by the list.
-  <message>, in <duration>: sets a reminder for the bot to remind you IN <duration> amount of time.
-  <message>, at <time>: sets a reminder for the bot to remind you AT the specified <time>. (Currently unsupported)`,
-  usage: "@remind <message>, in/at <time pattern>",
+  description: `Set a reminder so that the bot will automatically remind you.`,
+  usage: "\n\n" +
+  "\tTo set a reminder in x amount of time:\n" + 
+  "\t\t@remind <message> in <x time>\n\n" +
+  "\t(Unavailable) To set a reminder at time x:\n" +
+  "\t\t@remind <message at <time x>\n\n" +
+  "\tTo list out all reminders:\n" +
+  "\t\t@remind --list\n\n" +
+  "\tTo remove the xth entry off the list:\n" +
+  "\t\t@remind --remove #x\n\n" +
+  "\tTo clear all entries\n" +
+  "\t\t@remind --clear\n\n"
 };

@@ -1,12 +1,121 @@
 const logger = require('logger.js')("Nova Command module: Automarket");
 
-const taskFactory = require('task-factory.js');
+const tf = require('task-factory.js');
 const zenyRegex = /^(\d{1,3}(.\d+)?[kmb]|\d+)$/;
 
+const ERRNUM = Object.freeze({
+  NO_ARGS: 1,
+  INVALID_INPUT: 2,
+  NOT_INT: 3,
+  INVALID_INTERVAL: 4,
+  INVALID_AUTOMARKET: 5,
+});
+
 exports.run = async (discordBot, message, args) => {
-  
+  logger.info(args);
+
+  switch (args.length) {
+    // No Argument Case
+    case 0:
+      invalidInput(message, ERRNUM.NO_ARGS);
+      return;
+    // Single word command cases
+    case 1:
+      switch (args[0]) {
+        case tf.CMD.CLEAR:
+          await clear(message, discordBot);
+          return;
+        case tf.CMD.LIST:
+          await list(message, discordBot, 1);
+          return;
+        default:
+          invalidInput(message, ERRNUM.INVALID_INPUT);
+          return;
+      } 
+    // Single word command cases with argument
+    case 2:
+      switch (args[0]) {
+        case tf.CMD.LIST:
+          const page = parseInt(args[1]);
+          if (!page) {
+            invalidInput(message, ERRNUM.NOT_INT);
+            return;
+          }
+          await list(message, discordBot, page);
+          return;
+        case tf.CMD.REMOVE:
+          const entry = parseInt(args[1]);
+          if (!entry) {
+            invalidInput(message, ERRNUM.NOT_INT);
+            return;
+          }
+          await remove(message, discordBot, entry);
+          return;
+        case tf.CMD.INTERVAL:
+          const interval = parseInt(args[1]);
+          if (!interval || interval < 0 || interval > 60) {
+            invalidInput(mesage, ERRNUM.INVALID_INTERVAL);
+            return;
+          }
+          await setInterval(message, discordBot, interval);
+          return;
+        default:
+          const itemID = parseInt(args[0]);
+          if (!itemID) {
+            invalidInput(message, ERRNUM.INVALID_AUTOMARKET);
+            return;
+          }
+          if (!zenyRegex.test(args[1])) {
+            invalidInput(message, ERRNUM.INVALID_ZENY);
+            return;
+          } 
+          await addAutoMarket(message, discordBot, args); 
+          return;
+      }
+    default:
+      const itemID = parseInt(args[0]);
+      if (!itemID) {
+        invalidInput(message, ERRNUM.INVALID_AUTOMARKET);
+        return;
+      }
+      if (!zenyRegex.test(args[1])) {
+        invalidInput(message, ERRNUM.INVALID_ZENY);
+        return;
+      }
+      await addAutoMarket(message, discordBot, args);
+      return;
+  }
+}
+
+async function clear(message, bot) {
+  await bot.scheduler.clear(tf.AUTOMARKET);
+  message.channel.send(`All automarkets are cleared.`);
+}
+
+async function list(message, bot, page) {
+  const list = await bot.scheduler.getAutoMarketList(page);
+  console.log(list);
+  message.channel.send(list);
+}
+
+async function remove(message, bot, entry) {
+  const removed = await bot.scheduler.remove(tf.TYPE.AUTOMARKET, entry);
+  console.log(removed);
+  message.channel.send(`${removed}`);
+}
+
+async function setInterval(message, bot, interval) {
+  await discordBot.scheduler.setCronInterval(interval);
+  message.channel.send(`Set automarket check interval to every ${interval} minute${interval == 1 ? "" : "s"}.`);
+}
+
+async function addAutoMarket(message, bot, args) {
+
+}
+
+async function oldStuff () {
   if (args == "clear") {
-    await discordBot.scheduler.clear(taskFactory.AUTOMARKET);
+    await discordBot.scheduler.clear(tf.AUTOMARKET);
     message.channel.send("All automarkets are cleared");
     return;
   }
@@ -24,18 +133,18 @@ exports.run = async (discordBot, message, args) => {
     return;
   }
 
-  if (args[0] == taskFactory.REMOVE) {
+  if (args[0] == tf.REMOVE) {
     if (isNaN(args[1])) {
       message.channel.send("Please specify the index on the list to remove the item.");
       return;
     }
-    const removedMsg = await discordBot.scheduler.remove(taskFactory.AUTOMARKET, args[1]);
+    const removedMsg = await discordBot.scheduler.remove(tf.AUTOMARKET, args[1]);
     console.log(removedMsg);
     message.channel.send(removedMsg);
     return;
   }
 
-  if (args[0] == taskFactory.INTERVAL) {
+  if (args[0] == tf.INTERVAL) {
     if (isNaN(args[1] ||
         parseInt(args[1]) < 1)) {
       message.channel.send("Cannot set interval to be less than 1 minute or it needs to be an integer.");
@@ -63,7 +172,7 @@ exports.run = async (discordBot, message, args) => {
     channel: message.channel.id,
     ownerid: message.author.id,
     owner: message.author.username,
-    type: taskFactory.AUTOMARKET,
+    type: tf.TYPE.AUTOMARKET,
     args: args,
     interval: interval,
   };

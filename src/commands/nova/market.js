@@ -9,43 +9,61 @@ const PAGE_FINDER = /^p\d{1,2}$/;
 const PREV_QUERIES = {};
 let LAST_QUERY = 0;
 
-exports.run = async (discordBot, message, args) => {
-  console.log(args);
+const ERRNUM = Object.freeze({
+  NAS: 1, // no args
+});
 
-  if (args.length === 0) {          // 0 length case
-    message.channel.send("Need to specify an id.");
+exports.run = async (discordBot, message, args) => {
+  logger.info(args);
+
+  // No arguments Case
+  if (args.length === 0) {
+    invalidInput(message, ERRNUM.NAS);
+    return;
+  } 
   
-  } else if (args.length === 1) {   // 1 length case
-    if (isNaN(args)) {
-      doSearch(message, args);           // search case
-      return;
-    }
-    doItemId(message, args);             // get item case
-  
-  } else {                          // > 1 length case
-    if (isNaN(args[0])) {
-      doSearch(message, args);           // search case
-      return;
-    }
-    const itemId = args.shift();
+  // handles searching 
+  if (isNaN(args[0])) {
     const filters = getFilters(args);
-    doItemId(message, itemId, filters);     // get item case
+    doSearch(message, filters);
+    return;
   }
+  
+  const itemID = args.shift();
+  const filters = getFilters(args);
+  doItemId(message, itemID, filters);
 };
 
-async function doSearch(message, args) {
+function invalidInput(message, errnum) {
+  switch (errnum) {
+    case ERRNUM.NAS:
+      message.channel.send(`Please specify an argument.`);
+      return;
+    default:
+      message.channel.send(`This is a new species of errors`);
+      return; 
+  }
+}
+
+async function doSearch(message, filters) {
   logger.info("Search");
 
+  const page = filters.page;
+  const args = filters[nvro.HEADERS.ADDPROPS];
   const search = await nvro.getSearchData(args);
-
-
-  message.channel.send(`\`\`\`\n Bear has not learnt how to search yet.\n \`\`\``);
+  
+  if (search.error == nvro.ERROR.NO_RESULT) {
+    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${search.name}\n\nNo Results Found :(\`\`\``);
+    return;
+  }
+  const prettyTable = new pp.PrettyTableFactory(search);
+  essage.channel.send(prettyTable.getPage(page));
 }
 
 async function doItemId(message, itemId, filters = {}) {
   logger.info("Item");
   itemId = parseInt(itemId);
-  let page = filters.page || 1; 
+  let page = filters.page; 
   if (itemId < 100) {                               // last 
     page = itemId;
     getFromLast(message, page, filters);
@@ -97,9 +115,6 @@ async function getFromLive(message, itemId, page, filters) {
   market.table.intToStrCols(nvro.HEADERS.QTY);
   market.table.intToStrCols(nvro.HEADERS.PRICE);
   market.table.intToStrCols(nvro.HEADERS.REFINE);
-
-  console.log(filters);
-
   prettyTable = new pp.PrettyTableFactory(market);
   LAST_QUERY = prettyTable.id;
   PREV_QUERIES[LAST_QUERY] = {
@@ -143,6 +158,10 @@ exports.info = {
   name: "market",
   alias: "ws",
   category: "Nova",
-  description: "idk yet",
-  usage: "@market <item_ID>",
+  description: "Use this command to get current items sold in Nova, or look for items in Nova.",
+  usage: "\n\n" +
+  "\tSearch who sells by itemID:\n" +
+  "\t\t@market #itemID \n\n" + 
+  "\tSearch for itemID by name: \n" +
+  "\t\t@market [item name] \n\n",
 };
