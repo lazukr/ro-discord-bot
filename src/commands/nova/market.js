@@ -57,7 +57,7 @@ async function doSearch(message, filters) {
     return;
   }
   const prettyTable = new pp.PrettyTableFactory(search);
-  essage.channel.send(prettyTable.getPage(page));
+  message.channel.send(prettyTable.getPage(page));
 }
 
 async function doItemId(message, itemId, filters = {}) {
