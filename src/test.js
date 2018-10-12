@@ -189,21 +189,8 @@ async function testnvroSearch(args) {
 
   
 
-  const search = await nvro.getSearchData(args); 
-  
-  if (market.error = nvro.ERROR.UNKNOWN) {
-    console.log("Unknown");
-  }
-
-  if (market.error = nvro.ERROR.NO_RESULT) {
-    console.log("No Result");
-  }
-
-  console.log(market.table);
-
-
-  market.table.intToStrCols(nvro.HEADERS.QTY);
-  market.table.intToStrCols(nvro.HEADERS.PRICE);
+  const a = await nvro.getSearchData(args); 
+  console.log(a); 
   /*
   const prettyTable = new pp.PrettyTable(market);
   //prettyTable.print();
@@ -217,7 +204,7 @@ async function testnvroSearch(args) {
   */
 }
 
-
+testnvroSearch("twin edge".split(' '));
 
 
 
