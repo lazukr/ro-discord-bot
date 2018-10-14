@@ -4,7 +4,7 @@ const tf = require('task-factory.js');
 const ERRNUM = Object.freeze({
   NAS: 1, // no args
   NAONI: 2, // no arg or not int
-  FA: 3,
+  FA: 3, // fail add
 });
 
 exports.run = async (discordBot, message, args) => {

@@ -71,3 +71,6 @@ config.json
 # ignore testdb
 src/testdb/
 src/testdb/*
+src/liveSchedulerDB/*
+src/settings/*
+src/userdb/*
