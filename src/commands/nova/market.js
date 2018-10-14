@@ -3,8 +3,6 @@ const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
 
 const TIME_INTERVAL = 300000; // every 5 minutes
-const REFINE_FINDER = /^(<)?\+\d{1,2}$/;
-const PAGE_FINDER = /^p\d{1,2}$/;
 
 const PREV_QUERIES = {};
 let LAST_QUERY = 0;
@@ -30,7 +28,7 @@ exports.run = async (discordBot, message, args) => {
   }
   
   const itemID = args.shift();
-  const filters = getFilters(args);
+  const filters = nvro.getFilters(args);
   doItemId(message, itemID, filters);
 };
 
@@ -97,17 +95,17 @@ function getFromPrevious(message, itemId, page, filters) {
   message.channel.send(`\`\`\`\n Previous query did not exist.\n\`\`\``);
 }
 
-async function getFromLive(message, itemId, page, filters) {
+async function getFromLive(message, itemId, page, filters, silent = 0) {
   logger.info("Getting from live...");
   
   const market = await nvro.getLiveMarketData(itemId);
   
-  if (market.error == nvro.ERROR.UNKNOWN) {
+  if (market.error == nvro.ERROR.UNKNOWN && !silent) {
     message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear does not know the unknown.\`\`\``);
     return;
   } 
 
-  if (market.error == nvro.ERROR.NO_RESULT) {
+  if (market.error == nvro.ERROR.NO_RESULT && !silent) {
     message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nNo Results Found :(\`\`\``);
     return;
   }
@@ -115,7 +113,7 @@ async function getFromLive(message, itemId, page, filters) {
   market.table.intToStrCols(nvro.HEADERS.QTY);
   market.table.intToStrCols(nvro.HEADERS.PRICE);
   market.table.intToStrCols(nvro.HEADERS.REFINE);
-  prettyTable = new pp.PrettyTableFactory(market);
+  const prettyTable = new pp.PrettyTableFactory(market);
   LAST_QUERY = prettyTable.id;
   PREV_QUERIES[LAST_QUERY] = {
     table: prettyTable,
@@ -129,31 +127,6 @@ async function getFromLive(message, itemId, page, filters) {
   message.channel.send(prettyTable.getPage(page, filters));
 }
 
-function getFilters(args) {
-  
-  const refine = args.find(arg => {
-    return arg.match(REFINE_FINDER);
-  });
-
-  const page = args.find(arg => {
-    return arg.match(PAGE_FINDER);
-  });
-
-  if (refine) {
-    args = args.filter(arg => arg != refine);
-  }
-
-  if (page) {
-    args = args.filter(arg => arg != page);
-  }
-
-  const filters = {};
-  filters[nvro.HEADERS.REFINE] = refine;
-  filters[nvro.HEADERS.ADDPROPS] = args;
-  filters.page = page ? parseInt(page.slice(1)) : 1;
-  return filters;
-}
-
 exports.info = {
   name: "market",
   alias: "ws",
@@ -165,3 +138,4 @@ exports.info = {
   "\tSearch for itemID by name: \n" +
   "\t\t@market [item name] \n\n",
 };
+
