@@ -90,7 +90,13 @@ async function addMessage(message, bot, args) {
     invalidInput(message, ERRNUM.FA);
     return;
   }
-  const localTime = await bot.scheduler.timeLocalize(message.author.id, scheduledItem.scheduled);
+
+  const parseDate = Date.parse(scheduledItem.scheduled);
+
+  const localTime = isNaN(scheduledItem.scheduled) &&
+    !isNaN(parseDate) ? 
+    scheduledItem.scheduled :
+    await bot.scheduler.timeLocalize(message.author.id, scheduledItem.scheduled);
   
   logger.info(`Message set to go off at ${scheduledItem.scheduled}(${localTime})`);
     
