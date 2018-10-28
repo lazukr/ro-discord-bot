@@ -22,7 +22,7 @@ exports.run = async (discordBot, message, args) => {
   
   // handles searching 
   if (isNaN(args[0])) {
-    const filters = getFilters(args);
+    const filters = nvro.getFilters(args);
     doSearch(message, filters);
     return;
   }
