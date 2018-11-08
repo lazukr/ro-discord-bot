@@ -18,7 +18,6 @@ class RagnarokBot {
     this.commandList = new Enmap();
     this.commandAliasList = new Enmap();
     this.client = new Discord.Client();
-    this.scheduler = new Scheduler(LIVE_STORAGE);
   }
 
   // loads all events that the bot can handle.
@@ -107,6 +106,7 @@ class RagnarokBot {
     this.logger.info('Starting ro-discord-bot...');
     await this.client.login(this.config.discordToken).catch(console.error);
     this.logger.info('Starting scheduler...');
+    this.scheduler = new Scheduler(LIVE_STORAGE);
     this.scheduler.init(this.client);
   }
 
