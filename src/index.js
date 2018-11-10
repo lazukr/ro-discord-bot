@@ -102,9 +102,25 @@ class RagnarokBot {
       });
    }
 
+  async login() {
+    await this.client.login(this.config.discordToken)
+      .then(msg => {
+        console.log(`Logged in successfully: ${msg}`);
+      })
+      .catch(err => {
+        console.log(`Error: ${err}`);
+      });
+
+  }
+
+
   async start() {
     this.logger.info('Starting ro-discord-bot...');
-    await this.client.login(this.config.discordToken).catch(console.error);
+    await this.login();
+    this.startScheduler();
+  }
+
+  async startScheduler() {
     this.logger.info('Starting scheduler...');
     this.scheduler = new Scheduler(LIVE_STORAGE);
     this.scheduler.init(this.client);
@@ -112,14 +128,17 @@ class RagnarokBot {
 
   async startListeners() {
     this.client.on('disconnect', dis => {
-      this.logger.info(dis);
+      this.logger.info(`Disconnected: ${dis}`);
+      this.scheduler.cancelAllJobs();
     });
 
     this.client.on('error', err => {
       this.logger.error(`${err.name}: ${err.message}`);
       this.logger.info("attempting to restart bot...");
+      this.scheduler.cancelAllJobs();
       this.client.destroy()
         .then(async () => {
+          this.client = new Discord.Client();
           await this.start();       
       });
     });
