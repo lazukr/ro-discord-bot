@@ -110,9 +110,7 @@ class RagnarokBot {
       .catch(err => {
         console.log(`Error: ${err}`);
       });
-
   }
-
 
   async start() {
     this.logger.info('Starting ro-discord-bot...');
@@ -120,20 +118,26 @@ class RagnarokBot {
     this.startScheduler();
   }
 
-  async startScheduler() {
+  startScheduler() {
     this.logger.info('Starting scheduler...');
     this.scheduler = new Scheduler(LIVE_STORAGE);
     this.scheduler.init(this.client);
+    this.logger.info(`Scheduler successfully started!`);
   }
 
-  async startListeners() {
+  startListeners() {
+    this.logger.info(`Starting listeners...`);
     this.client.on('disconnect', dis => {
       this.logger.info(`Disconnected: ${dis}`);
       this.scheduler.cancelAllJobs();
     });
 
+    this.client.on('reconnecting', rec => {
+      this.logger.info(`Reconnecting`);
+    });
+
     this.client.on('error', err => {
-      this.logger.error(`${err.name}: ${err.message}`);
+      this.logger.error(`An error has occurred. ${err.name}: ${err.message}`);
       this.logger.info("attempting to restart bot...");
       this.scheduler.cancelAllJobs();
       this.client.destroy()
@@ -142,12 +146,11 @@ class RagnarokBot {
           await this.start();       
       });
     });
-  }
 
-  rename(name) {
     this.client.on('ready', () => {
-      this.client.user.setUsername(name);
+      this.logger.info(`Ready!`);
     });
+    this.logger.info(`Listeners successfully started!`);
   }
 };
 
@@ -155,8 +158,8 @@ async function botboot() {
   const roBot = new RagnarokBot(LOGGER, CONFIG);
   await roBot.loadEvents();
   await roBot.loadCommands();
+  roBot.startListeners();
   await roBot.start();
-  await roBot.startListeners();
 }
 
 botboot();
