@@ -17,6 +17,7 @@
     "discord.js": "^11.2.1",
     "enmap": "^0.4.2",
     "enmap-level": "^1.0.0",
+    "moment": "^2.22.2",
     "moment-timezone": "^0.5.21",
     "node": "^9.3.0",
     "node-persist": "^3.0.1",
