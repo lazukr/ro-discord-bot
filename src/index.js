@@ -142,7 +142,6 @@ class RagnarokBot {
       this.scheduler.cancelAllJobs();
       this.client.destroy()
         .then(async () => {
-          this.client = new Discord.Client();
           await this.start();       
       });
     });
