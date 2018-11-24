@@ -132,17 +132,17 @@ class RagnarokBot {
     this.client.on('disconnect', dis => {
       this.logger.info(`Disconnected: ${dis}`);
       this.scheduler.cancelAllJobs();
-      bot.replyChannel.send(`Bear got disconnected :(`);
+      this.replyChannel.send(`Bear got disconnected :(`);
     });
 
     this.client.on('reconnecting', rec => {
       this.logger.info(`Reconnecting`);
-      bot.replyChannel.send(`Bear is attempting to reconnect...`); 
+      this.replyChannel.send(`Bear is attempting to reconnect...`); 
     });
 
     this.client.on('error', err => {
       this.logger.error(`An error has occurred. ${err.name}: ${err.message}`);
-      bot.replyChannel.send(`Bear encountered an error: ${err.name} - ${err.message}`); 
+      this.replyChannel.send(`Bear encountered an error: ${err.name} - ${err.message}`); 
       this.logger.info("attempting to restart bot...");
       this.scheduler.cancelAllJobs();
       this.client.destroy()
