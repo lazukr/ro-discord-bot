@@ -108,7 +108,7 @@ class RagnarokBot {
         console.log(`Logged in successfully: ${msg}`);
       })
       .catch(err => {
-        console.log(`Error: ${err}`);
+        console.log(`Login Error: ${err}`);
       });
   }
 
@@ -136,19 +136,17 @@ class RagnarokBot {
     });
 
     this.client.on('reconnecting', rec => {
-      this.logger.info(`Reconnecting`);
+      this.logger.info(`Bear reconnecting`);
       this.replyChannel.send(`Bear is attempting to reconnect...`); 
     });
 
-    this.client.on('error', err => {
-      this.logger.error(`An error has occurred. ${err.name}: ${err.message}`);
+    this.client.on('error', async (err) => {
+      this.logger.error(`Bear encountered an error. ${err.name}: ${err.message}`);
       this.replyChannel.send(`Bear encountered an error: ${err.name} - ${err.message}`); 
       this.logger.info("attempting to restart bot...");
       this.scheduler.cancelAllJobs();
-      this.client.destroy()
-        .then(async () => {
-          await this.start();       
-      });
+      this.client.destroy();
+      await this.start();       
     });
 
     this.client.on('ready', () => {
@@ -162,9 +160,8 @@ async function botboot() {
   const roBot = new RagnarokBot(LOGGER, CONFIG);
   await roBot.loadEvents();
   await roBot.loadCommands();
-  await roBot.startListeners().then(async () => {
-    await roBot.start();
-  });
+  await roBot.startListeners();
+  await roBot.start();
 }
 
 botboot();
