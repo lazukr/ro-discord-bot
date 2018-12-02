@@ -241,6 +241,10 @@ exports.info = {
   name: "gsheets",
   alias: "gs",
   category: "general",
-  description: "use this to interface with google sheets automatically.",
-  usage: "\`@command\` to",
+  description: "use this to register attendance on a google sheet.",
+  usage: "\n\n" +
+  "\tList: @gsheets --list\n\n" +
+  "\tAdd: @gsheets --add key id, key is the name you want to use to refer to it. Id is the google spreadsheetID\n\n" +
+  "\tRemove: @gsheets --remove key\n\n" +
+  "\tAttend: @gsheets key [name] yes/no. [name] is optional and when not included will use the sender's discord username.",
 };
