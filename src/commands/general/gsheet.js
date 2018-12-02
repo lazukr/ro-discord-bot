@@ -100,14 +100,12 @@ async function attend(auth, args) {
     // yes data
     const header = rows.shift();
     const nameRegex = /^.*name.*$/gi;
-    const attendRegex = /^.*attend.*$/gi;
     
     const nameIndex = header.findIndex(v => nameRegex.test(v));
-    const attendIndex = header.findIndex(v => attendRegex.test(v));
-    
+    const attendIndex = nameIndex + 1;
+
     // no corresponding headers
-    if (nameIndex === -1 ||
-        attendIndex === -1) {
+    if (nameIndex === -1) {
       msgHandler(msg, ERRMSG.NNA);
       return;
     }
