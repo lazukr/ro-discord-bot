@@ -142,7 +142,24 @@ async function addAutomarket(message, bot, args) {
   }
   
   logger.info(`automarket for itemID ${itemID} set for ${interval} minute${interval ? "s" : ""}`);
-  message.channel.send(`Bear will query market for itemID ${itemID}`);
+  
+  const replyStringArray = [];
+  replyStringArray.push(`Bear will query market for itemID \`${itemID}\``);
+  if (filters[nvro.HEADERS.PRICE]) {
+    const price = `${filters[nvro.HEADERS.PRICE].toLocaleString()}z`;
+    replyStringArray.push(`at price \`${price}\``);
+  }
+
+  let filterString = "";
+
+  filterString += filters[nvro.HEADERS.REFINE] ? 
+    `, \`${filters[nvro.HEADERS.REFINE]}\`` : "";
+  filterString += filters[nvro.HEADERS.ADDPROPS].length ? 
+    `, ${filters[nvro.HEADERS.ADDPROPS].map(e => `\`${e}\``).join(', ')}` : "";
+  logger.info(filterString);
+  const replyString = replyStringArray.join(' ') + filterString;
+  logger.info(replyString);
+  message.channel.send(replyString);
 }
 
 exports.info = {
@@ -154,5 +171,5 @@ exports.info = {
   list: use this to list all active automarket entries.
   interval <value>: set how frequent it checks the market. <value> is in minutes.
   remove <index>: remove an entry based on the index given by the list.`,
-  usage: "@automarket <item_ID> <price>",
+  usage: "@automarket <item_ID> <any market parameters>",
 };

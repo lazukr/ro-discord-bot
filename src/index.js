@@ -103,12 +103,13 @@ class RagnarokBot {
    }
 
   async login() {
-    try {
-      const login = await this.client.login(this.config.discordToken);
-      console.log(`Logged in successfully: ${login}`);
-    } catch(err) {
-      console.log(`Login Error: ${err}`);
-    }
+    await this.client.login(this.config.discordToken)
+      .then(res => {
+        console.log(`Logged in successfully: ${res}`);
+      })
+      .catch(err => {
+        console.log(`Login error: ${err}`);
+      });
   } 
 
   async start() {
