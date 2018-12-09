@@ -17,7 +17,6 @@ class RagnarokBot {
     this.config = config;
     this.commandList = new Enmap();
     this.commandAliasList = new Enmap();
-    this.client = new Discord.Client();
   }
 
   // loads all events that the bot can handle.
@@ -103,6 +102,7 @@ class RagnarokBot {
    }
 
   async login() {
+    this.logger.info(`token: ${this.config.discordToken}`);
     await this.client.login(this.config.discordToken)
       .then(res => {
         console.log(`Logged in successfully: ${res}`);
@@ -114,6 +114,10 @@ class RagnarokBot {
 
   async start() {
     this.logger.info('Starting ro-discord-bot...');
+    this.client = new Discord.Client();
+    await this.loadEvents();
+    await this.loadCommands();
+    await this.loadListeners();
     await this.login();
     this.replyChannel = this.client.channels.get(this.config.replyChannel);
     this.startScheduler();
@@ -127,7 +131,7 @@ class RagnarokBot {
     this.logger.info(`Scheduler successfully started!`);
   }
 
-  async startListeners() {
+  async loadListeners() {
     this.logger.info(`Starting listeners...`);
     this.client.on('disconnect', dis => {
       this.logger.info(`Disconnected: ${dis}`);
@@ -158,9 +162,6 @@ class RagnarokBot {
 
 async function botboot() {
   const roBot = new RagnarokBot(LOGGER, CONFIG);
-  await roBot.loadEvents();
-  await roBot.loadCommands();
-  await roBot.startListeners();
   await roBot.start();
 }
 
