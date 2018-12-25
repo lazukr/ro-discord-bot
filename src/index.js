@@ -107,8 +107,10 @@ class RagnarokBot {
       .then(res => {
         console.log(`Logged in successfully: ${res}`);
       })
-      .catch(err => {
+      .catch(async (err) => {
         console.log(`Login error: ${err}`);
+        console.log(`Retrying...`);
+        return await this.login();
       });
   } 
 
