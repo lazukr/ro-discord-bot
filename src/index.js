@@ -17,6 +17,7 @@ class RagnarokBot {
     this.config = config;
     this.commandList = new Enmap();
     this.commandAliasList = new Enmap();
+    this.client = new Discord.Client;
   }
 
   // loads all events that the bot can handle.
@@ -101,25 +102,40 @@ class RagnarokBot {
       });
    }
 
+  async loginWrap(token) {
+    if (token == '') {
+      throw new Error('Token is empty'); 
+    } 
+    return await this.client.login(token);
+  }
+
+
   async login() {
     this.logger.info(`token: ${this.config.discordToken}`);
-    await this.client.login(this.config.discordToken)
+    
+    if (this.client) {
+      this.client.destroy();
+    }
+    await this.loginWrap(this.config.discordToken)    
       .then(res => {
         console.log(`Logged in successfully: ${res}`);
       })
-      .catch(async (err) => {
+      .catch(err => {
         console.log(`Login error: ${err}`);
         console.log(`Retrying...`);
-        return await this.login();
+        return this.login();
       });
   } 
 
-  async start() {
-    this.logger.info('Starting ro-discord-bot...');
-    this.client = new Discord.Client();
+  async init() {
     await this.loadEvents();
     await this.loadCommands();
     await this.loadListeners();
+  }
+
+
+  async start() {
+    this.logger.info('Starting ro-discord-bot...');
     await this.login();
     this.replyChannel = this.client.channels.get(this.config.replyChannel);
     this.startScheduler();
@@ -151,8 +167,7 @@ class RagnarokBot {
       this.replyChannel.send(`Bear encountered an error: ${err.name} - ${err.message}`); 
       this.logger.info("attempting to restart bot...");
       this.scheduler.cancelAllJobs();
-      this.client.destroy();
-      await this.start();       
+      this.start();
     });
 
     this.client.on('ready', () => {
@@ -164,6 +179,7 @@ class RagnarokBot {
 
 async function botboot() {
   const roBot = new RagnarokBot(LOGGER, CONFIG);
+  await roBot.init();
   await roBot.start();
 }
 
