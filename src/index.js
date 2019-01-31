@@ -141,8 +141,12 @@ class RagnarokBot {
     this.startScheduler();
     this.replyChannel.send(`Bear is ready!`);
   }
-
+  
   startScheduler() {
+    if (this.scheduler) {
+      this.scheduler.cancelAllJobs();
+    }
+
     this.logger.info('Starting scheduler...');
     this.scheduler = new Scheduler(LIVE_STORAGE);
     this.scheduler.init(this.client);
