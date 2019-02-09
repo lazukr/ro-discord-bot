@@ -105,6 +105,8 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
     return;
   } 
 
+  console.log(market);
+
   if (market.error == nvro.ERROR.NO_RESULT && !silent) {
     message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nNo Results Found :(\`\`\``);
     return;
