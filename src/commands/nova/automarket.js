@@ -1,8 +1,8 @@
 const logger = require('logger.js')("Nova Command module: Automarket");
 
-const tf = require('task-factory.js');
-const nvro = require('nova-market-commons.js');
-
+const tf = require('task-factory');
+const nvro = require('nova-market-commons');
+const pp = require('pretty-print');
 const ERRNUM = Object.freeze({
   NAS: 1, // no args
   NAONI: 2, // no args or not int
@@ -118,7 +118,15 @@ async function addAutomarket(message, bot, args) {
     invalidInput(message, ERRNUM.NAONI);
     return;
   }
-  
+
+  const market = await nvro.getLiveMarketData(itemID);
+
+  if (market.error == nvro.ERROR.UNKNOWN) {
+    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear cannot automarket the unknown.\`\`\``);
+    return;
+  }
+
+
   const filters = nvro.getFilters(args); 
   console.log(filters);  
   
