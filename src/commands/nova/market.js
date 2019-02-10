@@ -100,12 +100,13 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
   
   const market = await nvro.getLiveMarketData(itemId);
   
-  if (market.error == nvro.ERROR.UNKNOWN && !silent) {
-    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear does not know the unknown.\`\`\``);
-    return;
-  } 
-
   console.log(market);
+
+  //if (market.error == nvro.ERROR.UKNOWN && !silent) {
+  //  message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear does not know the unknown.\`\`\``);
+  //  return;
+  //}
+
 
   if (market.error == nvro.ERROR.NO_RESULT && !silent) {
     message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nNo Results Found :(\`\`\``);
