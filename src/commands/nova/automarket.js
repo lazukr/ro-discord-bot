@@ -119,6 +119,14 @@ async function addAutomarket(message, bot, args) {
     return;
   }
 
+  //const market = await nvro.getLiveMarketData(itemID);
+
+  //if (market.error == nvro.ERROR.UNKNOWN) {
+  //  message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear cannot automarket the unknown.\`\`\``);
+  //  return;
+  //}
+
+
   const filters = nvro.getFilters(args); 
   console.log(filters);  
   
