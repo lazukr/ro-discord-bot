@@ -18,7 +18,7 @@ exports.run = async (discordBot, message, args) => {
   }
 
   const cmdInfo = cmd.cmd.info;
-  const usageString = cmdInfo.usage.replace("@", cmdSymbol);
+  const usageString = cmdInfo.usage.replace(/@/g, cmdSymbol);
   
   const msg = `\`\`\`name: ${cmdInfo.name}\n\
 alias: ${cmdInfo.alias ? cmdInfo.alias : "none"}\n\

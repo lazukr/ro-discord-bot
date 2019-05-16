@@ -5,5 +5,6 @@
   "commandsPath": "./commands/",
   "divinePrideToken": "REPLACE_WITH_YOUR_ID/TOKEN/CREDENTIALS",
   "novaUsername": "REPLACE_WITH_YOUR_ID/TOKEN/CREDENTIALS",
-  "novaPassword": "REPLACE_WITH_YOUR_ID/TOKEN/CREDENTIALS"
+  "novaPassword": "REPLACE_WITH_YOUR_ID/TOKEN/CREDENTIALS",
+  "replyChannel": "MAIN_CHANNEL_FOR_BOT_TO_REPLY_MESSAGES_TO"
 }
