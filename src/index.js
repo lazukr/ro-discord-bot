@@ -17,8 +17,7 @@ class RagnarokBot {
     this.config = config;
     this.commandList = new Enmap();
     this.commandAliasList = new Enmap();
-    this.client = new Discord.Client();
-    this.scheduler = new Scheduler(LIVE_STORAGE);
+    this.client = new Discord.Client;
   }
 
   // loads all events that the bot can handle.
@@ -103,41 +102,89 @@ class RagnarokBot {
       });
    }
 
+  async loginWrap(token) {
+    if (token == '') {
+      throw new Error('Token is empty'); 
+    } 
+    return await this.client.login(token);
+  }
+
+
+  async login() {
+    this.logger.info(`token: ${this.config.discordToken}`);
+    
+    if (this.client) {
+      this.client.destroy();
+    }
+    await this.loginWrap(this.config.discordToken)    
+      .then(res => {
+        console.log(`Logged in successfully: ${res}`);
+      })
+      .catch(err => {
+        console.log(`Login error: ${err}`);
+        console.log(`Retrying...`);
+        return this.login();
+      });
+  } 
+
+  async init() {
+    await this.loadEvents();
+    await this.loadCommands();
+    await this.loadListeners();
+  }
+
+
   async start() {
     this.logger.info('Starting ro-discord-bot...');
-    await this.client.login(this.config.discordToken).catch(console.error);
+    await this.login();
+    this.replyChannel = this.client.channels.get(this.config.replyChannel);
+    this.startScheduler();
+    this.replyChannel.send(`Bear is ready!`);
+  }
+  
+  startScheduler() {
+    if (this.scheduler) {
+      this.scheduler.cancelAllJobs();
+    }
+
     this.logger.info('Starting scheduler...');
+    this.scheduler = new Scheduler(LIVE_STORAGE);
     this.scheduler.init(this.client);
+    this.logger.info(`Scheduler successfully started!`);
   }
 
-  async startListeners() {
+  async loadListeners() {
+    this.logger.info(`Starting listeners...`);
     this.client.on('disconnect', dis => {
-      this.logger.info(dis);
+      this.logger.info(`Disconnected: ${dis}`);
+      this.scheduler.cancelAllJobs();
+      this.replyChannel.send(`Bear got disconnected :(`);
     });
 
-    this.client.on('error', err => {
-      this.logger.error(`${err.name}: ${err.message}`);
+    this.client.on('reconnecting', rec => {
+      this.logger.info(`Bear reconnecting`);
+      this.replyChannel.send(`Bear is attempting to reconnect...`); 
+    });
+
+    this.client.on('error', async (err) => {
+      this.logger.error(`Bear encountered an error. ${err.name}: ${err.message}`);
+      this.replyChannel.send(`Bear encountered an error: ${err.name} - ${err.message}`); 
       this.logger.info("attempting to restart bot...");
-      this.client.destroy()
-        .then(async () => {
-          await this.start();       
-      });
+      this.scheduler.cancelAllJobs();
+      this.start();
     });
-  }
 
-  rename(name) {
     this.client.on('ready', () => {
-      this.client.user.setUsername(name);
+      this.logger.info(`Ready!`);
     });
+    this.logger.info(`Listeners successfully started!`);
   }
 };
 
 async function botboot() {
   const roBot = new RagnarokBot(LOGGER, CONFIG);
-  await roBot.loadEvents();
-  await roBot.loadCommands();
+  await roBot.init();
   await roBot.start();
-  await roBot.startListeners();
 }
 
 botboot();
