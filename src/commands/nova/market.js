@@ -151,7 +151,7 @@ exports.info = {
   usage: "\n\n" +
   "\tSearch who sells by itemID:\n" +
   "\t\t@market #itemID \n\n" + 
-  "\tSearch for itemID by name: \n" +
+  "\tSearch for itemID by name. If the name is the only result, it will automatically search it as if it was an itemID: \n" +
   "\t\t@market [item name] \n\n",
 };
 
