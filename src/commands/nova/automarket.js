@@ -212,17 +212,14 @@ exports.info = {
   interval <value>: set how frequent it checks the market. <value> is in minutes.
   remove <index>: remove an entry based on the index given by the list.`,
   usage: `@automarket <item_ID> <any market parameters>
-  A market parameter can be prefixed with "!" to indicate the negative case (i.e. do not include).
-  It can also be fine tuned by using commas without spaces to look for multiple things within a particular paramter.
+  It can also be fine tuned by:
+    - using spaces to match multiple parameters within a property
+    - using commas to match multiple parameters in distinct properties
   For example:
     - !am 2964 matk 3%
-      * Find item 2974 with properties that contain "matk" AND "3%" (they can be on the same property or different ones)
-    - !am 2964 matk,3%
-      * Find item 2974 with a property that contains "matk" AND "3%"
-    - !am 2964 !matk,3% 
-      * Find item 2974 with a property that contains no "matk" BUT does contain "3%"
-    - !am 2964 !matk,!3% 
-      * Find item 2974 with a property that contains neither "matk" NOR "3%"
-    - !am 2964 matk,3% matk,2% 
-      * Find item 2974 with a property that contains "matk" AND "2%" AND a property that contains "matk" AND "3%"`,
+      * Find item 2974 with a property that contains both "matk" and "3%" 
+    - !am 2964 matk, 3%
+      * Find item 2974 with two separate properties that contains "matk" and "3%" respectively
+    - !am 2964 matk 3%, matk 2% 
+      * Find item 2974 with a property that contains "matk" and "2%" AND a second property that contains "matk" and "3%"`,
 };
