@@ -147,6 +147,8 @@ async function addAutomarket(message, bot, args) {
     return;
   } else {
     itemID = parseInt(item);
+    const market = await nvro.getLiveMarketData(itemID);
+    item = market.name; 
   } 
  
   //const market = await nvro.getLiveMarketData(itemIDID);
