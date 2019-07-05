@@ -113,13 +113,43 @@ async function setInterval(message, bot, interval) {
 
 async function addAutomarket(message, bot, args) {
 
-  const itemID = parseInt(args.shift());
-  if (!itemID || itemID < 100) {
+  args = args.join(' ').split(',');
+  args = args.map(i => i.trim());
+
+  let item = args.shift();
+  let itemID = 0;
+
+
+  if (isNaN(item)) {
+    const search = await nvro.getSearchData(item);
+    if (search.error == nvro.ERROR.NO_RESULT) {
+      message.channel.send(`\`\`\`${pp.HIGHTLIGHT}\n${search.name}\n\nNo results for this. Automarket could not be added.\`\`\``);
+      return;
+    }
+
+    if (search.table.contents.length > 1) {
+      args.shift();
+      const filters = nvro.getFilters(args);
+      message.channel.send(`\`\`\`${pp.HIGHLIGHT}\nThe name search has returned multiple results, please be more specific.\`\`\``);
+      const page = filters.page;
+      const prettyTable = new pp.PrettyTableFactory(search);
+      message.channel.send(prettyTable.getPage(page));
+      return;
+    }
+    
+    if (search.table.contents.length === 1) {
+      itemID = search.table.contents[0].Id;
+      item = search.table.contents[0].Name;
+    }
+
+  } else if (!item || item < 100) {
     invalidInput(message, ERRNUM.NAONI);
     return;
-  }
-
-  //const market = await nvro.getLiveMarketData(itemID);
+  } else {
+    itemID = parseInt(item);
+  } 
+ 
+  //const market = await nvro.getLiveMarketData(itemIDID);
 
   //if (market.error == nvro.ERROR.UNKNOWN) {
   //  message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear cannot automarket the unknown.\`\`\``);
@@ -141,6 +171,7 @@ async function addAutomarket(message, bot, args) {
     interval: interval,
     itemID: itemID,
     filters: filters,
+    name: item,
   }
   
   const automarketItem = await bot.scheduler.add(props);
@@ -148,11 +179,12 @@ async function addAutomarket(message, bot, args) {
     invalidInput(message, ERRNUM.FA);
     return; 
   }
-  
-  logger.info(`automarket for itemID ${itemID} set for ${interval} minute${interval ? "s" : ""}`);
+ 
+  const fullItemID = isNaN(item) ? `${itemID} - ${item}` : itemID;
+  logger.info(`automarket for itemID ${fullItemID} set for ${interval} minute${interval ? "s" : ""}`);
   
   const replyStringArray = [];
-  replyStringArray.push(`Bear will query market for itemID \`${itemID}\``);
+  replyStringArray.push(`Bear will query market for itemID \`${fullItemID}\``);
   if (filters[nvro.HEADERS.PRICE]) {
     const price = `${filters[nvro.HEADERS.PRICE].toLocaleString()}z`;
     replyStringArray.push(`at price \`${price}\``);
