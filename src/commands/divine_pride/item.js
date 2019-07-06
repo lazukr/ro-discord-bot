@@ -1,8 +1,8 @@
 const dp = require('divine-pride-commons.js');
 const logger = require('logger.js')("Divine Pride Item Module");
 exports.info = {
-  name: "item",
-  alias: "ii",
+  name: "dpii",
+  alias: "dpii",
   category: "Divine Pride",
   description: "Gets information of an item from the divine pride database. Currently only supports using an id.",
   usage: "@item <item_id>",
