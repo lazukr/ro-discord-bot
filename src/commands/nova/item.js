@@ -3,6 +3,10 @@ const logger = require('logger.js')("Nova Command module: Item");
 const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
 
+const PREV_QUERIES = {};
+let LAST_QUERY = 0;
+
+
 const ERRNUM = Object.freeze({
   NAS: 1, // no args
 });
@@ -54,10 +58,23 @@ async function doSearch(message, args) {
     return; 
   }
 
-  const page = filters.page;
+  const page = parseInt(args[0]) || 1;
   const prettyTable = new pp.PrettyTableFactory(search);
   message.channel.send(prettyTable.getPage(page));
 }
+
+async function doItemId(message, itemId) {
+  logger.info("ID");
+  itemId = parseInt(itemId);
+  if (itemId < 100) {
+    page = ItemId;
+    getFromLast(message, page);
+  } else if (PREV_QUERIES.hasOwnProperty(itemId)) {
+    getFromPrevious(message, itemId, page);
+  } else {
+    getFromLive(message, itemId, page);
+  }
+} 
 
 async function getItemInfo(message, itemID) {
   logger.info("item");

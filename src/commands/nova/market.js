@@ -65,8 +65,7 @@ async function doSearch(message, args) {
     return; 
   }
 
-
-  const page = filters.page;
+  const page = parseInt(args[0]) || 1;
   const prettyTable = new pp.PrettyTableFactory(search);
   message.channel.send(prettyTable.getPage(page));
 }
