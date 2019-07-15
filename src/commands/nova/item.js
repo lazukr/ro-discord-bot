@@ -134,7 +134,7 @@ exports.info = {
   alias: "ii",
   category: "Nova",
   description: `This allows you to look up information regarding an item`,
-  usage: `@iteminfo <itemID|itemName>`,
+  usage: `@iteminfo <itemID|itemName>, [p#]\n - including [p#] should only be for searching results. This represent the page for results.`,
 };
 
 exports.getItemInfo = getItemInfo;
