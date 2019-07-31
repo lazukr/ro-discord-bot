@@ -6,28 +6,10 @@
   "repository": "ssh://git@github.com/lazukr/ro-discord-bot.git",
   "author": "lazukr <peterh10201@gmail.com>",
   "license": "MIT",
-  "scripts": {
-    "start": "NODE_ENV=production node ./src/index.js",
-    "dev-start": "NODE_ENV=development node ./src/index.js",
-    "test": "node ./src/test.js",
-    "add-user": "node ./src/adduser.js"
-  },
+  "scripts": {},
   "dependencies": {
-    "cheerio": "^1.0.0-rc.2",
-    "discord.js": "^11.2.1",
-    "enmap": "^0.4.2",
-    "enmap-level": "^1.0.0",
-    "googleapis": "^35.0.0",
-    "moment": "^2.22.2",
-    "moment-timezone": "^0.5.21",
-    "node": "^9.3.0",
-    "node-persist": "^3.0.1",
-    "node-schedule": "^1.3.0",
-    "readline": "^1.3.0",
-    "request": "^2.85.0",
-    "request-promise": "^4.2.2",
-    "uuid": "^3.3.2",
-    "winston": "^2.4.0",
-    "ws": "3.3.2"
+    "cheerio": "^1.0.0-rc.3",
+    "discord.js": "^11.5.1",
+    "node": "^12.7.0"
   }
 }
