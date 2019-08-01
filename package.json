@@ -6,10 +6,16 @@
   "repository": "ssh://git@github.com/lazukr/ro-discord-bot.git",
   "author": "lazukr <peterh10201@gmail.com>",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "start": "node --experimental-modules src/index.mjs"
+  },
   "dependencies": {
+    "chalk": "^2.4.2",
     "cheerio": "^1.0.0-rc.3",
     "discord.js": "^11.5.1",
-    "node": "^12.7.0"
+    "fs": "^0.0.1-security",
+    "moment": "^2.24.0",
+    "node": "^12.7.0",
+    "util": "^0.12.1"
   }
 }
