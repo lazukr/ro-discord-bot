@@ -1,5 +1,5 @@
 export default class Command {
-  constructor(client, {
+  constructor(bot, {
     name = null,
     description = "No description provided.",
     category = "Miscellaneous",
@@ -7,7 +7,7 @@ export default class Command {
     enabled = true,
     aliases = new Array(),
   }) {
-    this.client = client;
+    this.bot = bot;
     this.configuration = { enabled, aliases};
     this.help = { name, description, category, usage };
   }

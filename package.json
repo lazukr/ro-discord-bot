@@ -7,7 +7,9 @@
   "author": "lazukr <peterh10201@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node --experimental-modules src/index.mjs"
+    "start": "node src/index.js",
+    "test": "jest",
+    "test-silent": "jest --silent"
   },
   "dependencies": {
     "chalk": "^2.4.2",
@@ -16,6 +18,11 @@
     "fs": "^0.0.1-security",
     "moment": "^2.24.0",
     "node": "^12.7.0",
+    "request-promise": "^4.2.4",
     "util": "^0.12.1"
+  },
+  "devDependencies": {
+    "esm": "^3.2.25",
+    "jest": "^24.8.0"
   }
 }
