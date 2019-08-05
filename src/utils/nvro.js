@@ -1,6 +1,6 @@
 import Logger from './logger';
-import Scraper, { tableType } from './scraper';
-import DataTable from './datatable';
+import Scraper, { TABLE_TYPE } from './scraper';
+import DataTable, { MarketDataTable } from './datatable';
 
 // this file should contain all the tools needed to handle processing the data from websites.
 
@@ -8,18 +8,17 @@ const URL = 'https://www.novaragnarok.com';
 const ITEM_SEARCH_TABLE = '#itemtable';
 const ITEM_DATA_TABLE = '.vertical-table';
 
-export const MarketHeaders = Object.freeze({
-  Quantity: "Qty",
-  Item: "Item",
-  Price: "Price",
-  AddProps: "Additional Properties",
-  Refine: "Refine",
-  Location: "Location",
+export const MARKET_COLUMNS = Object.freeze({
+  QUANTITY: "Qty",
+  ITEM: "Item",
+  PRICE: "Price",
+  ADDPROPS: "Additional Properties",
+  REFINE: "Refine",
+  LOCATION: "Location",
 });
 
 export default class NovaROUtils {
   static async getSearchData(name, pagenum) {
-
     const qs = {
       module: "item",
       action: "index",
@@ -36,7 +35,7 @@ export default class NovaROUtils {
     const table = new DataTable({
       page: page,
       table: search,
-      type: tableType.MARKET,
+      type: TABLE_TYPE.MARKET,
     });
     
     return {
@@ -86,13 +85,13 @@ export default class NovaROUtils {
     const dtInfo = new DataTable({
       page: page,
       table: info,
-      type: tableType.MARKET,
+      type: TABLE_TYPE.MARKET,
     });
 
     const dtDescription = new DataTable({
       page: page,
       table: description,
-      type: tableType.DESCRIPTION,
+      type: TABLE_TYPE.DESCRIPTION,
     });
 
     const dtDrops = new DataTable({
@@ -111,6 +110,42 @@ export default class NovaROUtils {
       image: `${URL}/data/items/images2/${id}.png`,
       url: `${URL}/?module=vending&action=view&id=${id}`,
       preview: preview ? page(preview).find('img').eq(1).attr('src') : null,  
+    };
+  }
+
+  static async getMarketData(id, filters) {
+    const qs = {
+      module: "vending",
+      action: "item",
+      id: id,
+    };
+
+    const page = await Scraper.getPage(URL, qs);
+    const market = Scraper.getElement({
+      page: page,
+      selector: ITEM_SEARCH_TABLE,
+      index: 0,
+    });
+
+    const table = new MarketDataTable({
+      page: page,
+      id: id,
+      filters: filters,
+      table: market,
+      type: TABLE_TYPE.MARKET,
+    });
+
+    const name = Scraper.getElement({
+      page: page,
+      selector: 'h2',
+      index: 0,
+    });
+
+    return {
+      table: table,
+      name: page(name).find('a').text().trim(),
+      page: filters.PAGE,
+      filters: filters, 
     };
   }
 }

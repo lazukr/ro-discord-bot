@@ -2,6 +2,8 @@ import Logger from '../utils/logger';
 import Command from '../utils/command';
 import Nova from '../utils/nvro';
 import PrettyPrinter from '../utils/prettyPrinter';
+import { getSearch, getItem } from '../utils/nvrocmd';
+
 
 export default class NovaItemInfo extends Command {
   constructor(bot) {
@@ -15,42 +17,35 @@ export default class NovaItemInfo extends Command {
 
   async run(message, args) {
 
-    args = args.join(' ').split(',').map(arg => arg.trim());
+    args = args
+      .join(' ')
+      .split(',')
+      .map(arg => arg.trim())
+      .filter(arg => args != '');
 
     if (!args.length) {
-      message.channel.send(`Please specify the id of an item to search.`);
+      await message.channel.send(`Please specify the name or id of an item to search.`);
       return 'No args';
     }
 
     if (isNaN(args[0])) {
+      Logger.log(`First argument is not a number. Assuming name.`);
       const name = args.shift();
       const pagenum = parseInt(args.shift()) || undefined;
-      await getSearchInfo(message, name, pagenum);
-      return;
+      const reply = await getSearch({
+        params: name,
+        pagenum: pagenum,
+      });
+
+      if (!isNaN(reply)) {
+        return this.run(message, [reply]);
+      }
+      await message.channel.send(reply);
+      return reply;
     } 
     
-    await getItemInfo(message, args[0]);  
-  }
-}
-
-async function getSearchInfo(message, name, pagenum) {
-  Logger.log(`Getting search info: ${name}. Page: ${pagenum}`);
-  const search = await Nova.getSearchData(name, pagenum);
-  const reply = PrettyPrinter.tabulate(search);
-  if (reply) {
+    const reply = await getItem(args[0]);
     await message.channel.send(reply);
-    return;
+    return reply;
   }
-
-  await message.channel.send(`No results found.`);
-  return reply;
 }
-
-async function getItemInfo(message, itemId) {
-  Logger.log(`Getting item info: ${itemId}`);
-  const id = parseInt(itemId);
-  const result = await Nova.getItemData(id);
-  const reply = PrettyPrinter.itemInfo(result);  
-  await message.channel.send(reply);
-  return reply;
-};

@@ -1,7 +1,6 @@
 import Logger from './logger';
 import Scraper from './scraper';
-import { MarketHeaders } from './nvro';
-
+import { MARKET_COLUMNS } from './nvro';
 
 export default class DataTable {
   constructor({
@@ -15,10 +14,10 @@ export default class DataTable {
       type: type,
     });
 
-    if (header.hasOwnProperty('')) {
-      delete header[''];
+    if (header.hasOwnProperty("")) {
+      delete header[""];
       contents.forEach(row => {
-        delete row[''];
+        delete row[""];
       });
     }
 
@@ -34,7 +33,7 @@ export default class DataTable {
     if (this.header[col]) {
       return true;
     }
-    console.log(`This table does not have the column: ${col}`);
+    Logger.warn(`This table does not have the column: ${col}`);
     return false;
   } 
 
@@ -45,63 +44,92 @@ export default class DataTable {
     this.contents.sort((a, b) => {
       return a[col] - b[col];
     });
-    return this;
   }
 
   // turns string integers into actual integers
   quantify(col) {
     if (!this.hasColumn(col)) {
-      return this;
+      return;
     }
 
-    this.contents = this.contents.map(row => {
-      row[col] = parseInt(row[col].replace(/,|\+g/, ''));
+    this.contents = this.contents.map(row => { 
+      row[col] = parseInt(row[col].replace(/,|\+g/g, ""));
+      return row;
     });
-    return this;
   }
 };
 
 export class MarketDataTable extends DataTable {
   constructor(config) {
     super(config);
+    this.filters = config.filters;
     this.id = config.id;
+    this.quantify(MARKET_COLUMNS.PRICE);
+    this.quantify(MARKET_COLUMNS.REFINE);
+    this.quantify(MARKET_COLUMNS.QUANTITY);
+    this.sort(MARKET_COLUMNS.PRICE);
+    this.processPrice();
+    this.processRefine();
+    this.stringify(MARKET_COLUMNS.PRICE, "", "z");
+    this.stringify(MARKET_COLUMNS.REFINE, "+");
+    this.stringify(MARKET_COLUMNS.QUANTITY);
+    this.locationfy();
+    this.shortenHeaders(MARKET_COLUMNS.REFINE, "Rfn");
+    this.shortenHeaders(MARKET_COLUMNS.ADDPROPS, "Add Props");
   }
 
-  processRefine(refine) {
-    if (!refine || !refine.length) {
-      console.log('No refine specified');
-      return this;
+  shortenHeaders(col, name) {
+    if (this.hasColumn(col)) {
+      this.header[col] = name;
     }
+  }
 
-    const ref = refine.split('+');
-    if (ref[0] === "<") {
-      this.contents = this.contents
-        .filter(row => {
-          return row[MarketHeaders.Refine] 
-          <= parseInt(ref[1]);
-        });
+  processRefine() {
+    if (!this.filters.REFINE) {
+      return;    
     }
 
     this.contents = this.contents
       .filter(row => {
-        return row[MarketHeaders.Refine]
-        >= parseInt(ref[1]);
+        return row[MARKET_COLUMNS.REFINE]
+        >= parseInt(this.filters.REFINE);
       });
-
-    return this;
   }
 
-  processPrice(price) {
-    if (!price || !price.length) {
-      console.log('No price specified');
-      return this;
+  processPrice() {
+    if (!this.filters.PRICE) {
+      return;
     }
-    
+
     this.contents = this.contents
       .filter(row => {
-        return parseInt(row) <= parseInt(price);
+        const price = row[MARKET_COLUMNS.PRICE];
+        return parseInt(price) <= parseInt(this.filters.PRICE);
       });
+  }
+
+  processAddProps() {
 
   }
 
+  stringify(col, prefix = "", postfix = "") {
+    if (!this.hasColumn(col)) {
+      return;
+    }
+
+    this.contents = this.contents.map(row => {
+      row[col] = `${prefix}${row[col].toLocaleString()}${postfix}`;
+      return row;
+    });
+  }
+
+  locationfy() {
+    this.contents = this.contents.map(row => {
+      const location = row[MARKET_COLUMNS.LOCATION].split(',');
+      row[MARKET_COLUMNS.LOCATION] = location[0] == "nova_vend" ? 
+        `@sj ${location[1]} ${location[2]}` :
+        `@navi ${location[0]} ${location[1]}/${location[2]}`;
+      return row;
+    });
+  }
 };

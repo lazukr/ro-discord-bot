@@ -3,7 +3,7 @@ import cheerio from 'cheerio';
 
 import Logger from './logger';
 
-export const tableType = Object.freeze({
+export const TABLE_TYPE = Object.freeze({
   DEFAULT: 0,
   MARKET: 1,
   DIVINE: 2,
@@ -46,7 +46,7 @@ export default class Scraper {
   static getTableContent({
     page,
     table,
-    type = tableType.DEFAULT,
+    type = TABLE_TYPE.DEFAULT,
   }) {
 
     const rows = page(table).find('tr');
@@ -102,7 +102,7 @@ function tableToJSON({
   });
 
   return {
-    header: type === tableType.DIVINE ? { 'Id': "Id", ...header } : header,
+    header: type === TABLE_TYPE.DIVINE ? { 'Id': "Id", ...header } : header,
     contents: contents,
   };
 }
@@ -116,7 +116,7 @@ function rowToJSON({
 }) {
   return rows.reduce((acc, cur, idx) => {
     // market item case
-    if (type === tableType.MARKET &&
+    if (type === TABLE_TYPE.MARKET &&
         header[keys[idx]] === "Item") {
       const tooltip = page(cur)
         .find('img')
@@ -130,14 +130,14 @@ function rowToJSON({
     } 
     
     // description case
-    else if (type === tableType.DESCRIPTION) {
+    else if (type === TABLE_TYPE.DESCRIPTION) {
       acc[header[keys[idx]]] = page(cur)
         .text()
         .trim();
     }
     
     // divine case
-    else if (type === tableType.DIVINE &&
+    else if (type === TABLE_TYPE.DIVINE &&
               header[keys[idx]] === "Name") {
       const id = page(cur)
         .find('a')

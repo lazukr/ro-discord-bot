@@ -18,7 +18,11 @@ export default class PrettyPrinter {
     });
 
     if (!printTable.hasResults) {
-      return null;
+      const reply = `\`\`\`${HIGHLIGHT}\n` +
+      `${name ? name + '\n\n' : ""}` +
+      `No results found. :(\n` +
+      `\`\`\``;
+      return reply;
     }
     return printTable.get(page);
   }    
@@ -77,6 +81,7 @@ class Tabulator {
     supressEntryText = false,
   }) {
     const { header, contents } = table;
+    this.name = name;
     this.suppressEntryText = supressEntryText;
     this.keys = Object.keys(header);
     this.columnWidths = this._getColumnWidths(header, contents); 
