@@ -12,6 +12,7 @@ export default class Signature extends Command {
       description: `Gets the signature of a Nova RO character. To specify background and pose respectively, include #/# after the name. Background seems to go from 0 - ${MAX_BACKGROUND}. Pose seems to go from 0 - ${MAX_POSE}.`,
       usage: `${bot.prefix}char <name> [#/#]`,
       aliases: [],
+      category: "Nova",
     });
   } 
 

@@ -3,7 +3,7 @@ import NovaMarket, { getFilters } from '../src/commands/market';
 import PrettyPrinter from '../src/utils/prettyPrinter';
 
 const marketName = 'poring';
-const marketId = 23016;
+const marketId = 2964;
 
 // setup
 const bot = {
@@ -62,10 +62,15 @@ it('Filter Test. Price only b.', async () => {
 
 
 it('Get Market Data. With Filters', async () => {
-  const filters = getFilters(['30m']);
-  const result = novamarket.run(message, [marketId]);
+  const args = makeArgs([marketId, "3%", "2%"]);
+  
 
+  const result = await novamarket.run(message, args);
 });
+
+function makeArgs(args) {
+  return args.join(', ').split(' ');
+}
 
 function getDefaultFilters({
   PAGE = 1,

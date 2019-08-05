@@ -1,8 +1,8 @@
-import Logger from '../utils/logger';
-import Command from '../utils/command';
-import Nova, { MARKET_COLUMNS } from '../utils/nvro';
-import PrettyPrinter from '../utils/prettyPrinter';
-import { getSearch, getMarket } from '../utils/nvrocmd';
+import Logger from "../utils/logger";
+import Command from "../utils/command";
+import Nova, { MARKET_COLUMNS } from "../utils/nvro";
+import PrettyPrinter from "../utils/prettyPrinter";
+import { getSearch, getMarket } from "../utils/nvrocmd";
 
 const FINDER = Object.freeze({
   REFINE: /^<?\+\d{1,2}$/,
@@ -18,6 +18,7 @@ export default class NovaMarket extends Command {
       description: "Gets market information of a particular item directly from Nova RO's website.",
       usage: `${bot.prefix}market <item name | item id> [, <page number>]`,
       aliases: ["ws", "whosells"],
+      category: "Nova",
     });
   }
 
@@ -27,15 +28,15 @@ export default class NovaMarket extends Command {
     if (!args.length) {
       const reply = `Please specify the name or id of an item to check market.`; 
       await message.channel.send(reply);
-      return 'No args';
+      return "No args";
     }
 
     // transform arguments so that the array is comma separated
     args = args
-      .join(' ')
-      .split(',')
+      .join(" ")
+      .split(",")
       .map(arg => arg.trim())
-      .filter(arg => arg != '');
+      .filter(arg => arg != "");
 
     // search
     if (isNaN(args[0])) {
@@ -74,21 +75,32 @@ function find(args, type) {
   return args.find(arg => {
     const match = arg.match(type);
     if (match) {
-      args.filter(arg => arg != match);
+      args = args.filter(arg => arg != match);
     }
     return match;
   });
+}
+
+function filterArgs(args, filter) {
+  if (filter) {
+    return args.filter(arg => arg != filter);
+  }
+  return args;
 }
 
 export function getFilters(args) {
   const refine = find(args, FINDER.REFINE);
   const page = find(args, FINDER.PAGE);
   const zeny = find(args, FINDER.ZENY);
+  
+  args = filterArgs(args, refine);
+  args = filterArgs(args, page);
+  args = filterArgs(args, zeny); 
 
   const price = zeny ? 
-    parseFloat(zeny) * (zeny.includes('k') ?
-      1000 : zeny.includes('m') ?
-      1000000 : zeny.includes('b') ?
+    parseFloat(zeny) * (zeny.includes("k") ?
+      1000 : zeny.includes("m") ?
+      1000000 : zeny.includes("b") ?
       1000000000 : 1) : undefined;
   
   // cloning the market filters and setting it all to null
@@ -96,9 +108,11 @@ export function getFilters(args) {
   Object.keys(filters).map(key => {
     filters[key] = null;
   });
+
   filters.REFINE = parseInt(refine);
   filters.PAGE = page ? parseInt(page.slice(1)) : 1;
   filters.PRICE = parseInt(price);
+  filters.ADDPROPS = args.length ? args : null;
   return filters;
 }
 

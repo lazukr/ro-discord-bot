@@ -12,6 +12,7 @@ export default class Char extends Command {
       description: `Gets the sprite of a Nova RO character. To specify action and rotation respectively, include a #/# after the name. Action seems to go from 0 - ${MAX_ACTION}. Rotation seems to go from 0 - ${MAX_ROTATION}.`,
       usage: `${bot.prefix}char <name> [#/#]`,
       aliases: [],
+      category: "Nova",
     });
   } 
 

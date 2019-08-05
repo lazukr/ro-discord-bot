@@ -81,6 +81,7 @@ class Tabulator {
     supressEntryText = false,
   }) {
     const { header, contents } = table;
+    this.originalLength = table.originalLength;
     this.name = name;
     this.suppressEntryText = supressEntryText;
     this.keys = Object.keys(header);
@@ -156,7 +157,7 @@ class Tabulator {
   // returns a string that contains the table of the results
   get(page = 1) {
     // count from 0
-    page = page - 1;
+    page = Math.min(page - 1, this.pages.length - 1);
     let reply = `\`\`\`${HIGHLIGHT}\n` +
       `${this.name ? this.name + '\n\n' : ""}` +
       `${this.header.join('\n')}\n` +
@@ -166,8 +167,13 @@ class Tabulator {
       const startEntry = Math.min(this.contents.length, this.entriesPerPage * page + 1);
       const endEntry = Math.min(this.contents.length, this.entriesPerPage * (page + 1));
       reply += '\n' +
-        `Entries ${startEntry} to ${endEntry} of ${this.contents.length}`; 
+        `Page ${page + 1} of ${this.pages.length}. Entries ${startEntry} to ${endEntry} of ${this.contents.length}.`; 
     }
+
+    if (this.originalLength) {
+      reply += ` Total: ${this.originalLength}.`;
+    }
+
     reply += '\`\`\`';
     return reply;
   }

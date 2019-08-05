@@ -62,6 +62,7 @@ export default class DataTable {
 export class MarketDataTable extends DataTable {
   constructor(config) {
     super(config);
+    this.originalLength = super.length;
     this.filters = config.filters;
     this.id = config.id;
     this.quantify(MARKET_COLUMNS.PRICE);
@@ -70,6 +71,7 @@ export class MarketDataTable extends DataTable {
     this.sort(MARKET_COLUMNS.PRICE);
     this.processPrice();
     this.processRefine();
+    this.processAddProps();
     this.stringify(MARKET_COLUMNS.PRICE, "", "z");
     this.stringify(MARKET_COLUMNS.REFINE, "+");
     this.stringify(MARKET_COLUMNS.QUANTITY);
@@ -109,7 +111,40 @@ export class MarketDataTable extends DataTable {
   }
 
   processAddProps() {
+    if (!this.filters.ADDPROPS) {
+      return;
+    }
+   
+    const addprops = this.filters.ADDPROPS.map(addprop => {
+      return addprop.split(',').map(prop => prop.trim());
+    });
 
+    this.contents = this.contents.filter(row => {
+      const rowprops = row[MARKET_COLUMNS.ADDPROPS]
+        .toLowerCase()
+        .split(/(?<![Ll]v)\.|,/)
+        .map(prop => prop.trim())
+        .filter(prop => prop !== "");
+
+      let count = 0;
+      const alreadyMatched = [];
+
+      addprops.forEach(addprop => {
+        rowprops.some((rowprop, propindex) => {
+          const match = addprop.every(ap => {
+            return rowprop.includes(ap);
+          });
+          
+          if (match &&
+              !alreadyMatched.includes(propindex)) {
+            alreadyMatched.push(propindex);
+            count++;
+            return true;
+          }
+        });
+      });
+      return Boolean(count === addprops.length);
+    }); 
   }
 
   stringify(col, prefix = "", postfix = "") {

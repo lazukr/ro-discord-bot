@@ -12,6 +12,7 @@ export default class NovaItemInfo extends Command {
       description: "Gets information of a particular item directly from Nova RO's website.",
       usage: `${bot.prefix}nvii <item name | item id> [, <page number>]`,
       aliases: ["ii"],
+      category: "Nova",
     });
   }
 
