@@ -113,7 +113,7 @@ export default class NovaROUtils {
     };
   }
 
-  static async getMarketData(id, filters) {
+  static async getMarketData(id, filters = {}) {
     const qs = {
       module: "vending",
       action: "item",

@@ -22,7 +22,7 @@ export default class NovaMarket extends Command {
     });
   }
 
-  async run(message, args) {
+  async run(message, args, silent = false) {
 
     // reject empty messages
     if (!args.length) {
@@ -30,6 +30,8 @@ export default class NovaMarket extends Command {
       await message.channel.send(reply);
       return "No args";
     }
+
+    console.log(args);
 
     // transform arguments so that the array is comma separated
     args = args
@@ -43,7 +45,7 @@ export default class NovaMarket extends Command {
       Logger.log(`First argument is not a number. Assuming name.`);
       const name = args.shift();
       const filters = getFilters(args);
-      const reply = await getSearch({
+      const { reply, result } = await getSearch({
         params: name,
         pagenum: filters.PAGE,
       });
@@ -60,10 +62,15 @@ export default class NovaMarket extends Command {
     // valid id. Search for it in the market.
     const id = args.shift(); 
     const filters = getFilters(args);
-    const reply = await getMarket({
+    const { reply, result } = await getMarket({
       id: id,
       filters: filters,
     });
+
+    if (!result && silent) {
+      Logger.log(reply);
+      return;
+    }
 
     await message.channel.send(reply);
     Logger.log(reply);

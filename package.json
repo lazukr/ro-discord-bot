@@ -17,6 +17,8 @@
     "discord.js": "^11.5.1",
     "fs": "^0.0.1-security",
     "moment": "^2.24.0",
+    "mongodb": "^3.3.0-beta2",
+    "mongodb-cron": "^1.7.0",
     "node": "^12.7.0",
     "request-promise": "^4.2.4",
     "util": "^0.12.1"

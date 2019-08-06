@@ -14,7 +14,8 @@ export default class Command {
   }
 
   getSubCommand(arg) {
-    return arg.match(/(?<=--).*/g)[0];
+    const match = arg.match(/(?<=--).*/g);
+    return match ? match[0] : null;
   }
 
   async runSubCommand(cmd, message, args) {

@@ -1,13 +1,16 @@
-import Logger from './utils/logger';
 import Discord from 'discord.js';
 import fs from 'fs';
 import util from 'util';
 import chalk from 'chalk';
 
+import Logger from './utils/logger';
+import Scheduler from './utils/scheduler';
+
 const readdir = util.promisify(fs.readdir);
 
 export default class Bot {
   constructor({
+    dburl,
     token,
     commands,
     name,
@@ -21,6 +24,7 @@ export default class Bot {
     this.prefix = prefix;
     this.logger = Logger;
     this.client = new Discord.Client();
+    this.scheduler = new Scheduler(this, dburl);
   }
 
   async loadEvents() {
@@ -86,6 +90,7 @@ export default class Bot {
 
   async start() {
     this.logger.log(`${this.name} is starting...`);
-    this.client.login(this.token);
+    await this.client.login(this.token);
+    await this.scheduler.init();
   }
 };

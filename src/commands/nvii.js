@@ -33,7 +33,7 @@ export default class NovaItemInfo extends Command {
       Logger.log(`First argument is not a number. Assuming name.`);
       const name = args.shift();
       const pagenum = parseInt(args.shift()) || undefined;
-      const reply = await getSearch({
+      const { reply } = await getSearch({
         params: name,
         pagenum: pagenum,
       });

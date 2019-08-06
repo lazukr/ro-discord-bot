@@ -22,9 +22,15 @@ export default class PrettyPrinter {
       `${name ? name + '\n\n' : ""}` +
       `No results found. :(\n` +
       `\`\`\``;
-      return reply;
+      return {
+        reply: reply,
+        result: false,
+      };
     }
-    return printTable.get(page);
+    return {
+      reply: printTable.get(page),
+      result: true,
+    };
   }    
 
   static itemInfo({
