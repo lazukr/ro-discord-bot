@@ -13,18 +13,25 @@ export default class Choose extends Command {
 
   async run(message, args) {
     if (!args.length) {
-      await message.channel.send(`${this.bot.name} cannot choose something that is not there.`);
-      return;
+      const reply = `${this.bot.name} cannot choose something that is not there.`;
+      await message.channel.send(reply);
+      return reply;
     }
 
     const list = args.join(' ').split(',').map(text => text.trim());
-    if (list.length === 1) {
-      await message.channel.send(`${this.bot.name} was forced to choose this as there was nothing else to choose from.`);
-      return;
+    const allSame = list.every(arg => {
+      return arg === list[0];
+    });
+    if (list.length === 1 || allSame) {
+      const reply = `${this.bot.name} was forced to choose \`${list[0]}\` as there was nothing else to choose from.`;
+      await message.channel.send(reply);
+      return reply;
     }
 
     const chosen = list[choose(list.length)];
-    const msg = await message.channel.send(`\`${chosen}\``);
+    const reply = `\`${chosen}\``;
+    await message.channel.send(reply);
+    return reply;
   }
 }
 

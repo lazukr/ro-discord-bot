@@ -72,7 +72,7 @@ export default class NovaMarket extends Command {
       return;
     }
 
-    await message.channel.send(reply);
+    await message.channel.send(`${message.author.toString()}${reply}`);
     Logger.log(reply);
     return reply;
   }

@@ -83,6 +83,8 @@ export default class NovaAutoMarket extends Command {
       args: `${JSON.stringify(args)}`,
     });
 
+    Logger.log(JSON.stringify(result.ops));
+
     if (result.result.ok) {
       Logger.log("Successfully queued!");
       const reply = `Automarket queued for ${datatable.name} with the following filters: ${args.slice(1).join(",")}`;
@@ -99,6 +101,7 @@ export default class NovaAutoMarket extends Command {
       owner: message.author.id,
     });
     
+    // if we get valid results
     if (result.result.ok) {
       Logger.log(`Delete ${result.deletedCount} for ${message.author.username}(${message.author.id})`);
       const reply = `${result.deletedCount} entries were deleted.`;
@@ -115,6 +118,9 @@ export default class NovaAutoMarket extends Command {
       command: "market",
       owner: message.author.id,
     });
+
+    Logger.log(JSON.stringify(list));
+
 
     const header = {
       id: "#",
@@ -202,6 +208,7 @@ export default class NovaAutoMarket extends Command {
     if (!args.length) {
       Logger.log(`Getting automarket interval...`);
       const interval = await this.bot.scheduler.getInterval();
+      Logger.log(JSON.stringify(interval));
       return;
     }
 
@@ -211,8 +218,14 @@ export default class NovaAutoMarket extends Command {
       return "Not a number";
     }
 
-
-    // TODO //
+    const min = parseInt(args[0]);
     Logger.log(`Setting automarket interval...`);
+    const result = await this.bot.scheduler.setInterval(min);
+    
+    if (result.result.ok) {
+      const reply = `Interval is set to ${min}.`; 
+      Logger.log(reply);
+      await message.channel.send(reply);
+    }
   }
 }

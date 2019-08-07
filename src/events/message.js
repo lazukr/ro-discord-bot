@@ -30,7 +30,9 @@ export default class Message {
       return;
     }
 
-    Logger.log(`${message.author.username}(${message.author.id}) ran the command ${chalk.cyan(commandName)} with arguments: ${args}`);
-   command.run(message, args); 
+    const username = `${message.author.username}(${message.author.id})`;
+
+    Logger.log(`${chalk.cyan(username)} ran the command ${chalk.cyan(commandName)} with arguments: ${chalk.cyan(args)}`);
+    command.run(message, args); 
   }
 }

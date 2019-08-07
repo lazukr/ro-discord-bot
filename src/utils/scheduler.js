@@ -1,7 +1,7 @@
 import MongoClient from 'mongodb';
 import Logger from './logger';
 import { MongoCron } from 'mongodb-cron';
-
+import { default as config } from '../../config.json';
 export default class Scheduler {
   constructor(bot, url) {
     this.url = url;
@@ -16,24 +16,45 @@ export default class Scheduler {
       collection: this.collection,
       onDocument: async (doc) => this.process(doc),
       onError: async (err) => Logger.error(err),
-      nextDelay: 10000,
-      reprocessDelay: 10000,
+      reprocessDelay: 1000,
+      lockDuration: 10000,
     });
     cron.start();
 
 
     // default interval is 5 minutes. 
     // If it doesn't exist, we create it.
+
+    
+    await this.collection.deleteOne({
+      command: "interval",
+    });
+
     const interval = await this.getInterval();
+    const date = new Date();
+    const coeff = 1000 * 60 * config.aminterval;
+
+    const rounded = new Date(Math.ceil(date.getTime() / coeff) * coeff);
+
     if (!interval.length) {
       this.insert({
-        command: 'interval',
-        args: '5',
-        sleepUntil: null,
+        command: "interval",
+        interval: `0 */${config.aminterval} * * * *`,
+        sleepUntil: rounded,
         owner: null,
         channelid: null,
       });
     }
+
+    Logger.log("Interval");
+    Logger.log(JSON.stringify(await this.getInterval()));
+    Logger.log("Automarkets");
+    const automarketEntries = await this.list({
+      command: "market",
+    });
+    automarketEntries.forEach(am => {
+      Logger.log(JSON.stringify(am));
+    });
   }
 
   async getInterval() {
@@ -42,20 +63,41 @@ export default class Scheduler {
     }); 
   }
 
-  async process({
-    channelid,
-    command,
-    owner,
-    args,
-  }) {
+  async process(cronjob) {
+   
+    const { command } = cronjob;
 
-    const cmd = this.bot.commands.get(command);
-    const message = {
-      channel: this.bot.client.channels.get(channelid),
-    };
-    
-    args = args ? JSON.parse(args).join(", ").split(" ") : [];
-    cmd.run(message, args, true);
+    if (command === "interval") {
+
+      const sleep = new Date(cronjob.sleepUntil);
+
+      const current = new Date();
+
+      // must queue time vs execution time must be within 5 seconds
+      // otherwise, it is deemed too long and will be skipped
+      if (current - sleep > 1000 * 5) {
+        Logger.log("This will be skipped as too much time has passed");
+        return;
+      }
+
+      Logger.log(`Automarket: ${JSON.stringify(cronjob)}`);
+      const list = await this.list({
+        command: "market",
+      });
+     
+      const cmd = this.bot.commands.get("market");
+
+      list.forEach(async (entry) => {
+        Logger.log(`Processing ${JSON.stringify(entry)}`);
+        const { channelid, owner, args } = entry;
+        const message = {
+          channel: this.bot.client.channels.get(channelid),
+          author: this.bot.client.users.get(owner),
+        };
+        const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
+        await cmd.run(message, originalArgs, true);
+      });
+    }
   }
 
   async clear({
@@ -115,7 +157,7 @@ export default class Scheduler {
     args,
     name,
     itemid,
-    sleepUntil = 1,
+    sleepUntil = null,
     interval = null,
     autoRemove = false,
   }) {
@@ -126,17 +168,19 @@ export default class Scheduler {
       owner: owner,
       itemid: itemid,
       args: args,
-      sleepUntil: sleepUntil,
       name: name,
     };
 
-    if (command === "market") {
-      const interval = await this.getInterval();
-      params.interval = `* */${interval[0].args} * * * *`;
+    if (sleepUntil) {
+      params.sleepUntil = sleepUntil;
+    }
+
+    if (interval) {
+      params.interval = interval;
     }
 
     if (autoRemove) {
-      params.autoRemove = true;
+      params.autoRemove = autoRemove;
     }
 
     return await this.collection.insertOne(params);
