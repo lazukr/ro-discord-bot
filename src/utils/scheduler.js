@@ -67,6 +67,8 @@ export default class Scheduler {
    
     const { command } = cronjob;
 
+    Logger.debug(JSON.stringify(process.memoryUsage()));
+
     if (command === "interval") {
 
       const sleep = new Date(cronjob.sleepUntil);
