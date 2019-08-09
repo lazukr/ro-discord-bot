@@ -8,6 +8,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node src/index.js",
+    "debug": "node --inspect src/index.js",
     "test": "jest",
     "test-silent": "jest --silent"
   },

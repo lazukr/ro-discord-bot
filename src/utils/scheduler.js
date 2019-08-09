@@ -12,14 +12,14 @@ export default class Scheduler {
     const mongo = await MongoClient.connect(this.url, { useNewUrlParser: true });
     const db = mongo.db('test');
     this.collection = db.collection('jobs');
-    const cron = new MongoCron({
+    this.cron = new MongoCron({
       collection: this.collection,
-      onDocument: async (doc) => this.process(doc),
+      onDocument: async (doc) => await this.process(doc),
       onError: async (err) => Logger.error(err),
       reprocessDelay: 1000,
       lockDuration: 10000,
     });
-    cron.start();
+    this.cron.start();
 
 
     // default interval is 5 minutes. 
@@ -94,7 +94,7 @@ export default class Scheduler {
         Logger.log(`${key}: ${Math.round(usedBefore[key] / 1024 / 1024 * 100) / 100} MB`);
       }
 
-      list.forEach(async (entry) => {
+      await Promise.all(list.map(async (entry) => {
         Logger.log(`Processing ${JSON.stringify(entry)}`);
         const { channelid, owner, args } = entry;
         const message = {
@@ -103,7 +103,7 @@ export default class Scheduler {
         };
         const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
         await cmd.run(message, originalArgs, true);
-      });
+      }));
       Logger.log("Memory profile after loop:");
       const usedAfter = process.memoryUsage();
 
