@@ -88,10 +88,10 @@ export default class Scheduler {
       const cmd = this.bot.commands.get("market");
 
       Logger.log("Memory profile before loop:");
-      const used = process.memoryUsage();
+      const usedBefore = process.memoryUsage();
 
-      for (let key in used) {
-        Logger.log(`${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+      for (let key in usedBefore) {
+        Logger.log(`${key}: ${Math.round(usedBefore[key] / 1024 / 1024 * 100) / 100} MB`);
       }
 
       list.forEach(async (entry) => {
@@ -105,10 +105,10 @@ export default class Scheduler {
         await cmd.run(message, originalArgs, true);
       });
       Logger.log("Memory profile after loop:");
-      const used = process.memoryUsage();
+      const usedAfter = process.memoryUsage();
 
-      for (let key in used) {
-        Logger.log(`${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+      for (let key in usedAfter) {
+        Logger.log(`${key}: ${Math.round(usedAfter[key] / 1024 / 1024 * 100) / 100} MB`);
       }
     }
   }
