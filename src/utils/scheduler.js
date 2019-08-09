@@ -67,8 +67,6 @@ export default class Scheduler {
    
     const { command } = cronjob;
 
-    Logger.debug(JSON.stringify(process.memoryUsage()));
-
     if (command === "interval") {
 
       const sleep = new Date(cronjob.sleepUntil);
@@ -89,6 +87,13 @@ export default class Scheduler {
      
       const cmd = this.bot.commands.get("market");
 
+      Logger.log("Memory profile before loop:");
+      const used = process.memoryUsage();
+
+      for (let key in used) {
+        Logger.log(`${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+      }
+
       list.forEach(async (entry) => {
         Logger.log(`Processing ${JSON.stringify(entry)}`);
         const { channelid, owner, args } = entry;
@@ -99,6 +104,12 @@ export default class Scheduler {
         const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
         await cmd.run(message, originalArgs, true);
       });
+      Logger.log("Memory profile after loop:");
+      const used = process.memoryUsage();
+
+      for (let key in used) {
+        Logger.log(`${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+      }
     }
   }
 
