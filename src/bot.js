@@ -15,7 +15,9 @@ export default class Bot {
     commands,
     name,
     prefix,
+    aminterval,
   }) {
+    this.aminterval = aminterval;
     this.token = token;
     this.commandList = commands;
     this.commands = new Discord.Collection();
@@ -90,6 +92,9 @@ export default class Bot {
 
   async start() {
     this.logger.log(`${this.name} is starting...`);
+    await this.loadEvents();
+    await this.loadCommands();
+    this.attachListeners();
     await this.client.login(this.token);
     await this.scheduler.init();
   }

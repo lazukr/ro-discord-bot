@@ -1,7 +1,7 @@
 import MongoClient from 'mongodb';
 import Logger from './logger';
-import { MongoCron } from 'mongodb-cron';
-import { default as config } from '../../config.json';
+import cron from 'node-cron';
+
 export default class Scheduler {
   constructor(bot, url) {
     this.url = url;
@@ -12,42 +12,12 @@ export default class Scheduler {
     const mongo = await MongoClient.connect(this.url, { useNewUrlParser: true });
     const db = mongo.db('test');
     this.collection = db.collection('jobs');
-    this.cron = new MongoCron({
-      collection: this.collection,
-      onDocument: async (doc) => await this.process(doc),
-      onError: async (err) => Logger.error(err),
-      reprocessDelay: 1000,
-      lockDuration: 10000,
-    });
-    this.cron.start();
 
-
-    // default interval is 5 minutes. 
-    // If it doesn't exist, we create it.
-
-    
-    await this.collection.deleteOne({
-      command: "interval",
+    // begin the scheduler
+    cron.schedule(`0 */${this.bot.aminterval} * * * *`, async () => {
+      await this.processAutomarkets();
     });
 
-    const interval = await this.getInterval();
-    const date = new Date();
-    const coeff = 1000 * 60 * config.aminterval;
-
-    const rounded = new Date(Math.ceil(date.getTime() / coeff) * coeff);
-
-    if (!interval.length) {
-      this.insert({
-        command: "interval",
-        interval: `0 */${config.aminterval} * * * *`,
-        sleepUntil: rounded,
-        owner: null,
-        channelid: null,
-      });
-    }
-
-    Logger.log("Interval");
-    Logger.log(JSON.stringify(await this.getInterval()));
     Logger.log("Automarkets");
     const automarketEntries = await this.list({
       command: "market",
@@ -57,60 +27,28 @@ export default class Scheduler {
     });
   }
 
-  async getInterval() {
-    return await this.list({
-      command: 'interval',
-    }); 
-  }
+  async processAutomarkets() {
 
-  async process(cronjob) {
-   
-    const { command } = cronjob;
+    const list = await this.list({
+      command: "market",
+    });
 
-    if (command === "interval") {
+    const cmd = this.bot.commands.get("market");
 
-      const sleep = new Date(cronjob.sleepUntil);
+    await Promise.all(list.map(async (entry) => {
+      Logger.log(`Processing ${JSON.stringify(entry)}`);
+      const { channelid, owner, args } = entry;
+      const message = {
+        channel: this.bot.client.channels.get(channelid),
+        author: this.bot.client.users.get(owner),
+      };
+      const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
+      await cmd.run(message, originalArgs, true);
+    }));
+    const usedAfter = process.memoryUsage();
+    const ht = "heapTotal";
+    Logger.debug(`${ht}: ${Math.round(usedAfter[ht] / 1024 / 1024 * 100) / 100} MB`);
 
-      const current = new Date();
-
-      // must queue time vs execution time must be within 5 seconds
-      // otherwise, it is deemed too long and will be skipped
-      if (current - sleep > 1000 * 5) {
-        Logger.log("This will be skipped as too much time has passed");
-        return;
-      }
-
-      Logger.log(`Automarket: ${JSON.stringify(cronjob)}`);
-      const list = await this.list({
-        command: "market",
-      });
-     
-      const cmd = this.bot.commands.get("market");
-
-      Logger.log("Memory profile before loop:");
-      const usedBefore = process.memoryUsage();
-
-      for (let key in usedBefore) {
-        Logger.log(`${key}: ${Math.round(usedBefore[key] / 1024 / 1024 * 100) / 100} MB`);
-      }
-
-      await Promise.all(list.map(async (entry) => {
-        Logger.log(`Processing ${JSON.stringify(entry)}`);
-        const { channelid, owner, args } = entry;
-        const message = {
-          channel: this.bot.client.channels.get(channelid),
-          author: this.bot.client.users.get(owner),
-        };
-        const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
-        await cmd.run(message, originalArgs, true);
-      }));
-      Logger.log("Memory profile after loop:");
-      const usedAfter = process.memoryUsage();
-
-      for (let key in usedAfter) {
-        Logger.log(`${key}: ${Math.round(usedAfter[key] / 1024 / 1024 * 100) / 100} MB`);
-      }
-    }
   }
 
   async clear({
