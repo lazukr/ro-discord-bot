@@ -1,0 +1,19 @@
+{
+  "token": "<YOUR_TOKEN_HERE>",
+  "commands": [
+    "ping",
+    "help",
+    "char",
+    "sig",
+    "choose",
+    "nvii",
+    "market",
+   "automarket" 
+  ],
+  "name": "NAME",
+  "prefix": "!",
+  "subprefix": "--",
+  "dburl": "mongodb://localhost:27017",
+  "aminterval": "1",
+  "admin": []
+}
