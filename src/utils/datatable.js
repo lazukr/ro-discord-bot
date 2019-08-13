@@ -4,15 +4,9 @@ import { MARKET_COLUMNS } from './nvro';
 
 export default class DataTable {
   constructor({
-    page,
-    table,
-    type,
+    header,
+    contents,
   }) {
-    const { header, contents } = Scraper.getTableContent({
-      page: page,
-      table: table,
-      type: type,
-    });
 
     if (header.hasOwnProperty("")) {
       delete header[""];
@@ -57,6 +51,21 @@ export default class DataTable {
       return row;
     });
   }
+
+  stringify(col, prefix = "", postfix = "") {
+    if (!this.hasColumn(col)) {
+      return;
+    }
+
+    this.contents = this.contents.map(row => {
+      row[col] = `${prefix}${row[col].toLocaleString()}${postfix}`;
+      return row;
+    });
+  }
+
+  finalize() {
+
+  }
 };
 
 export class MarketDataTable extends DataTable {
@@ -72,9 +81,6 @@ export class MarketDataTable extends DataTable {
     this.processPrice();
     this.processRefine();
     this.processAddProps();
-    this.stringify(MARKET_COLUMNS.PRICE, "", "z");
-    this.stringify(MARKET_COLUMNS.REFINE, "+");
-    this.stringify(MARKET_COLUMNS.QUANTITY);
     this.locationfy();
     this.shortenHeaders(MARKET_COLUMNS.REFINE, "Rfn");
     this.shortenHeaders(MARKET_COLUMNS.ADDPROPS, "Add Props");
@@ -87,7 +93,8 @@ export class MarketDataTable extends DataTable {
   }
 
   processRefine() {
-    if (!this.filters.REFINE) {
+    if (!this.filters.REFINE ||
+        !this.header.Refine) {
       return;    
     }
 
@@ -99,7 +106,8 @@ export class MarketDataTable extends DataTable {
   }
 
   processPrice() {
-    if (!this.filters.PRICE) {
+    if (!this.filters.PRICE ||
+        !this.header.Price) {
       return;
     }
 
@@ -111,7 +119,8 @@ export class MarketDataTable extends DataTable {
   }
 
   processAddProps() {
-    if (!this.filters.ADDPROPS) {
+    if (!this.filters.ADDPROPS ||
+        !this.header["Additional Properties"]) {
       return;
     }
    
@@ -147,15 +156,10 @@ export class MarketDataTable extends DataTable {
     }); 
   }
 
-  stringify(col, prefix = "", postfix = "") {
-    if (!this.hasColumn(col)) {
-      return;
-    }
-
-    this.contents = this.contents.map(row => {
-      row[col] = `${prefix}${row[col].toLocaleString()}${postfix}`;
-      return row;
-    });
+  finalize() {
+    this.stringify(MARKET_COLUMNS.PRICE, "", "z");
+    this.stringify(MARKET_COLUMNS.REFINE, "+");
+    this.stringify(MARKET_COLUMNS.QUANTITY);
   }
 
   locationfy() {

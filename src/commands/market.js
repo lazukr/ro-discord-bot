@@ -49,7 +49,7 @@ export default class NovaMarket extends Command {
         params: name,
         pagenum: filters.PAGE,
       });
-     
+
       // search returned an id indicating one result.
       if (!isNaN(reply)) {
         return this.run(message, [reply]); 

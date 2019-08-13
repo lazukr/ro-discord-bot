@@ -9,8 +9,8 @@
   "scripts": {
     "start": "node src/index.js",
     "debug": "node --inspect src/index.js",
-    "test": "jest",
-    "test-silent": "jest --silent",
+    "test": "jest --silent",
+    "test-verbose": "jest",
     "am-test": "node --inspect tests/all.test.js"
   },
   "dependencies": {

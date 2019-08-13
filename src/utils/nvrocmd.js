@@ -13,15 +13,20 @@ export async function getSearch({
   if (!search.table.length) {
     const reply = 'No results found.';
     Logger.warn(reply);
-    return reply;
+    return {
+      result: false,
+      reply: reply, 
+    };
   } 
 
   if (search.table.length === 1) {
     const id = search.table.contents[0].Id;
     Logger.log(`Matches exactly one result. Id: ${id}`);
-    return id;
+    return {
+      reply: id,
+      result: true, 
+    };
   }
-
   const reply = PrettyPrinter.tabulate(search);
   Logger.log(reply);
   return reply;
@@ -30,8 +35,8 @@ export async function getSearch({
 export async function getItem(itemId) {
   Logger.log(`Getting item info: ${itemId}`);
   const id = parseInt(itemId);
-  const result = await Nova.getItemData(id);
-  const reply = PrettyPrinter.itemInfo(result);  
+  const table = await Nova.getItemData(id);
+  const reply = PrettyPrinter.itemInfo(table);  
   return reply;
 };
 
@@ -40,7 +45,7 @@ export async function getMarket({
   filters,
 }) {
   Logger.log(`Getting market info on item: ${id}. With filters: ${JSON.stringify(filters)}`);
-  const result = await Nova.getMarketData(id, filters);
-  const reply = PrettyPrinter.tabulate(result);
+  const table = await Nova.getMarketData(id, filters);
+  const reply = PrettyPrinter.tabulate(table);
   return reply;
 };

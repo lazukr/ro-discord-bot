@@ -86,6 +86,7 @@ class Tabulator {
     table,
     supressEntryText = false,
   }) {
+    table.finalize();
     const { header, contents } = table;
     this.originalLength = table.originalLength;
     this.name = name;

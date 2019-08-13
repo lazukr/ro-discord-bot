@@ -2,6 +2,7 @@ import Logger from "../utils/logger";
 import Command from "../utils/command";
 import Nova from "../utils/nvro";
 import PrettyPrinter from "../utils/prettyPrinter";
+import DataTable from "../utils/datatable";
 
 export default class NovaAutoMarket extends Command {
   constructor(bot) {
@@ -134,14 +135,14 @@ export default class NovaAutoMarket extends Command {
       row.args = JSON.parse(row.args).slice(1).join(",");
       return row;
     });
-   
-    const table = {
+     
+    const dt = new DataTable({
       header: header,
       contents: displayList,
-    }; 
+    }); 
 
     const { reply } = PrettyPrinter.tabulate({
-      table: table,
+      table: dt,
     });
 
     Logger.log(reply);

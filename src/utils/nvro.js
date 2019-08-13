@@ -31,15 +31,17 @@ export default class NovaROUtils {
       selector: ITEM_SEARCH_TABLE,
       index: 0,
     });
-
-    const table = new DataTable({
+    
+    const table = Scraper.getTableContent({
       page: page,
       table: search,
       type: TABLE_TYPE.MARKET,
     });
-    
+
+    const dt = new DataTable(table);
+
     return {
-      table: table,
+      table: dt,
       name: `Results for '${name}'`,
       page: pagenum,
     }; 
@@ -80,24 +82,26 @@ export default class NovaROUtils {
     const dropTitle = "<tr><th>Id</th><th>Name</th><th>Drop Rate</th></tr>";
     page(drops).children().first().children().first().replaceWith(dropTitle);
 
-
-    // grab data tables
-    const dtInfo = new DataTable({
+    const infoTable = Scraper.getTableContent({
       page: page,
       table: info,
       type: TABLE_TYPE.MARKET,
     });
 
-    const dtDescription = new DataTable({
+    const descriptionTable = Scraper.getTableContent({
       page: page,
       table: description,
       type: TABLE_TYPE.DESCRIPTION,
     });
 
-    const dtDrops = new DataTable({
+    const dropsTable = Scraper.getTableContent({
       page: page,
       table: drops,
     });
+    // grab data tables
+    const dtInfo = new DataTable(infoTable);
+    const dtDescription = new DataTable(descriptionTable);
+    const dtDrops = new DataTable(dropsTable);
 
     // max fields limit is 25 for discord embeded messages  
     dtDrops.contents = dtDrops.contents.slice(0, 25);
@@ -127,12 +131,19 @@ export default class NovaROUtils {
       index: 0,
     });
 
-    const table = new MarketDataTable({
+
+    const table = Scraper.getTableContent({
+      page: page,
+      table: market,
+      type: TABLE_TYPE.MARKET,
+    }); 
+
+    const dt = new MarketDataTable({
       page: page,
       id: id,
       filters: filters,
-      table: market,
-      type: TABLE_TYPE.MARKET,
+      header: table.header,
+      contents: table.contents,
     });
 
     const name = Scraper.getElement({
@@ -142,7 +153,7 @@ export default class NovaROUtils {
     });
 
     return {
-      table: table,
+      table: dt,
       name: page(name).find('a').text().trim(),
       page: filters.PAGE,
       filters: filters, 
