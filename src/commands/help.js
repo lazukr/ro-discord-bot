@@ -27,14 +27,33 @@ export default class Help extends Command {
       return;
     }
     
-    const reply = '' +
-      `Name: ${command.help.name}\n` +
-      `Description: ${command.help.description}\n` +
-      `Category: ${command.help.category}\n` +
-      `Usage: ${command.help.usage}\n` +
-      `Aliases: ${command.configuration.aliases.toString()}\n`;
+    const embed = {
+      embed: {
+        title: `**${command.help.name}**`,
+        description: command.help.description,
+        fields: [{
+          name: "**Alias**",
+          value: `${command.configuration.aliases.join(', ')}`,
+        }, {
+          name: "**Category**",
+          value: command.help.category,
+        }, {
+          name: "**Usage**",
+          value: command.help.usage,
+        }],
+      },
 
-    message.channel.send(reply);
+    };
+
+
+    const reply = '```\n' +
+      `Name: ${command.help.name}\n\n` +
+      `Aliases: ${command.configuration.aliases.toString()}\n\n` +
+      `Description: ${command.help.description}\n\n` +
+      `Category: ${command.help.category}\n\n` +
+      `Usage: ${command.help.usage}\n\n` +
+      '```';
+    message.channel.send(embed);
   }
 
 }

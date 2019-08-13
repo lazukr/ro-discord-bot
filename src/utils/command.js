@@ -14,7 +14,8 @@ export default class Command {
   }
 
   getSubCommand(arg) {
-    const match = arg.match(/(?<=--).*/g);
+    const regex = new RegExp(`(?<=${this.bot.subprefix}).*`, 'g');
+    const match = arg.match(regex);
     return match ? match[0] : null;
   }
 

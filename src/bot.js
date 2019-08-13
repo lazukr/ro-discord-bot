@@ -15,6 +15,7 @@ export default class Bot {
     commands,
     name,
     prefix,
+    subprefix,
     aminterval,
   }) {
     this.aminterval = aminterval;
@@ -24,6 +25,7 @@ export default class Bot {
     this.aliases = new Discord.Collection();
     this.name = name;
     this.prefix = prefix;
+    this.subprefix = subprefix;
     this.logger = Logger;
     this.client = new Discord.Client();
     this.scheduler = new Scheduler(this, dburl);
