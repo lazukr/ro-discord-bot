@@ -9,9 +9,9 @@ export default class NovaAutoMarket extends Command {
     super(bot, {
       name: "automarket",
       description: "Gets market information of a particular item directly from Nova RO's website on a regular basis. When results exist, the bot will notify the user.\n\* Use subcommand **list** to list out all your automarket.\n\* Use subcommand **remove** to remove an entry from your automarket based on the id from the list. You can provide a list of comma separated ids.\n\* Use subcommand **clear** to remove ALL entries from your automarket.",
-      usage: `${bot.prefix}automarket <item id> [, <refine>] [, <price>] [, <additional properties>].\n\n` +
+      usage: `${bot.prefix}automarket <item id> [, <refine>] [, <price>] [, <additional properties>, ...].\n\n` +
       `${bot.prefix}automarket ${bot.subprefix}list \n\n` +
-      `${bot.prefix}automarket ${bot.subprefix}remove <entry id> [,entry id]...\n\n` +
+      `${bot.prefix}automarket ${bot.subprefix}remove <entry id> [, <entry id>, ...]\n\n` +
       `${bot.prefix}automarket ${bot.subprefix}clear`,
       aliases: ["am"],
       category: "Nova",
