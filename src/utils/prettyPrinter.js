@@ -137,7 +137,7 @@ class Tabulator {
   _prettify(table) {
     const padded = this._pad(table);
     return padded.map(row => {
-      return Object.values(row).join(' ');
+      return Object.values(row).join('  ');
     });
   }
 
