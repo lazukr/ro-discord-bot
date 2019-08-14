@@ -50,9 +50,11 @@ export default class NovaMarket extends Command {
         pagenum: filters.PAGE,
       });
 
+      const newargs = [reply, ...args].join(', ').split(' ');
+
       // search returned an id indicating one result.
       if (!isNaN(reply)) {
-        return this.run(message, [reply]); 
+        return this.run(message, newargs); 
       }
       
       await message.channel.send(reply);
