@@ -191,8 +191,17 @@ export default class NovaAutoMarket extends Command {
     const removedReply = await Promise.all(removeids.map(async (id) => {
       Logger.log(`Attempting to delete automarket with id: ${id}.`);
       const deleteEntryInfo = await this.bot.scheduler.get(id);
-      deleteEntryInfo.args = JSON.parse(deleteEntryInfo.args).slice(1).join(","); 
+      
+      const args = JSON.parse(deleteEntryInfo.args).slice(1); // remove first item as that is the item id
+      const rowargs = getFilters(args);
 
+      const price = rowargs.PRICE ? `${rowargs.PRICE.toLocaleString()}z` : "";
+      const refine = rowargs.REFINE ? `+${rowargs.REFINE}` : "";
+      const addprops = rowargs.ADDPROPS ? rowargs.ADDPROPS.join(", ") : "";
+
+      const propsarr = [price, refine, addprops];
+      const props = propsarr.filter(arr => arr != "");
+      deleteEntryInfo.args = props.join(", ");
       const result = await this.bot.scheduler.remove(id);
       Logger.log(result);
       return deleteEntryInfo; 
