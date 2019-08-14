@@ -3,6 +3,7 @@ import Command from "../utils/command";
 import Nova from "../utils/nvro";
 import PrettyPrinter from "../utils/prettyPrinter";
 import DataTable from "../utils/datatable";
+import { getFilters } from "./market";
 
 export default class NovaAutoMarket extends Command {
   constructor(bot) {
@@ -74,7 +75,7 @@ export default class NovaAutoMarket extends Command {
     // grabbing datatable (for name)
     const datatable = await Nova.getMarketData(args[0]);
     args = args ? args : [];
-
+    
     // insert into scheduler
     // restore the argument to what it would have looked like
     // if it was ran normally
@@ -134,8 +135,17 @@ export default class NovaAutoMarket extends Command {
     };
 
     const displayList = list.map((row, index) => {
+      const args = JSON.parse(row.args).slice(1); // remove first item as that is the item id
+      const rowargs = getFilters(args);
+
+      const price = rowargs.PRICE ? `${rowargs.PRICE.toLocaleString()}z` : "";
+      const refine = rowargs.REFINE ? `+${rowargs.REFINE}` : "";
+      const addprops = rowargs.ADDPROPS ? rowargs.ADDPROPS.join(", ") : "";
+
+      const propsarr = [price, refine, addprops];
+      const props = propsarr.filter(arr => arr != "");
       row.id = (index + 1).toString(); 
-      row.args = JSON.parse(row.args).slice(1).join(",");
+      row.args = props.join(", ");
       return row;
     });
      
@@ -194,42 +204,17 @@ export default class NovaAutoMarket extends Command {
       args: "Properties", 
     };
     
-    const table = {
+    const dt = new DataTable({
       header: header,
       contents: removedReply,
-    };
+    });
 
     const { reply } = PrettyPrinter.tabulate({
-      table: table,
+      table: dt,
     });
     
     Logger.log(reply);
-    await message.channel.send(`The following automarket were removed.\n${reply}`);
+    await message.channel.send(`The following automarket were removed from ${message.author.username}'s automarket.\n${reply}`);
     return reply; 
-  }
-
-  async interval(message, args) {
-    if (!args.length) {
-      Logger.log(`Getting automarket interval...`);
-      const interval = await this.bot.scheduler.getInterval();
-      Logger.log(JSON.stringify(interval));
-      return;
-    }
-
-    if (isNaN(args[0])) {
-      Logger.log(`Not a number`);
-      await message.channel.send('Setting interval requires a number.');
-      return "Not a number";
-    }
-
-    const min = parseInt(args[0]);
-    Logger.log(`Setting automarket interval...`);
-    const result = await this.bot.scheduler.setInterval(min);
-    
-    if (result.result.ok) {
-      const reply = `Interval is set to ${min}.`; 
-      Logger.log(reply);
-      await message.channel.send(reply);
-    }
   }
 }
