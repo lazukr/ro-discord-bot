@@ -15,9 +15,17 @@ export default async function ROChargenPHP({
     await message.channel.send(`Please specify a name with the command.`);
     return 'No args';
   }
-
-  const params = args.length > 1 ? args.pop() : "-/-";
-  const values = verifyValues(params, max_values);
+  
+  const lastArg = args.length > 1 ? args[args.length - 1] : "-/-";
+  const params = parse(lastArg);
+  const valid = verifyValues(params, max_values);
+  
+  if (valid.first || valid.second) {
+    args.pop();
+  } 
+  
+  const values = getNewArgs(valid, params, max_values); 
+  
   const name = args.join('_');
   const timestamp = Date.now();
   const commandType = type === 'sig' ? 'newsig/' : 'character/';
@@ -33,17 +41,26 @@ export default async function ROChargenPHP({
   };
 }
 
-function verifyValues(params, max_values) {
+export function parse(params) {
   const values = params.split('/');
-  const first = parseInt(values[0]);
-  const second = parseInt(values[1]);
-
   return {
-    first: isNaN(first) || !between(first, 0, max_values[0]) ?
-      getRandomInt(0, max_values[0]) : first,
-    second: isNaN(second) || !between(second, 0, max_values[1]) ?
-      getRandomInt(0, max_values[1]) : second,
+    first: parseInt(values[0]),
+    second: parseInt(values[1]),
   };
+}
+
+export function verifyValues({ first, second}, max_values) {
+  return {
+    first: !isNaN(first) && between(first, 0, max_values[0]), 
+    second: !isNaN(second) && between(second, 0, max_values[1]), 
+  }
+}
+
+export function getNewArgs(valid, params, max_values) {
+  return {
+    first: valid.first ? params.first : getRandomInt(0, max_values[0]),
+    second: valid.second ? params.second : getRandomInt(0, max_values[1]),
+  }
 }
 
 function between(value, min, max) {
