@@ -14,7 +14,6 @@ const message = {
 const module = new Module({});
 const name = 'name';
 const type = 'char';
-
 // tests
 describe(`Running ${chalk.cyan(type)} command with:`, () => {
   
