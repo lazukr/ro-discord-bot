@@ -2,7 +2,7 @@ import Discord from 'discord.js';
 import fs from 'fs';
 import util from 'util';
 import chalk from 'chalk';
-
+import Scraper from './utils/scraper';
 import Logger from './utils/logger';
 import Scheduler from './utils/scheduler';
 
@@ -17,6 +17,7 @@ export default class Bot {
     prefix,
     subprefix,
     aminterval,
+    novaCredentials,
   }) {
     this.aminterval = aminterval;
     this.token = token;
@@ -26,6 +27,7 @@ export default class Bot {
     this.name = name;
     this.prefix = prefix;
     this.subprefix = subprefix;
+    this.novaCredentials = novaCredentials;
     this.logger = Logger;
     this.client = new Discord.Client();
     this.scheduler = new Scheduler(this, dburl);
@@ -69,7 +71,11 @@ export default class Bot {
       }
     });
   }
-  
+ 
+  async novaLogin() {
+    Scraper.login(this.novaCredentials);
+  }
+
   attachListeners() {
     this.logger.log(`${this.name} is starting listeners...`);
     this.client.on('disconnect', dis => {
@@ -98,6 +104,7 @@ export default class Bot {
     await this.loadCommands();
     this.attachListeners();
     await this.client.login(this.token);
+    await this.novaLogin();
     await this.scheduler.init();
   }
 };
