@@ -3,7 +3,7 @@ const util = require('util');
 const fs = require('fs');
 const path = require('path');
 const Enmap = require('enmap');
-
+const sc = require('scrape-commons');
 const readdir = util.promisify(fs.readdir);
 const CONFIG = require('./config.json');
 const LOGGER = require('logger.js');
@@ -133,12 +133,16 @@ class RagnarokBot {
     await this.loadListeners();
   }
 
+  async novaLogin() {
+    await sc.login();
+  }
 
   async start() {
     this.logger.info('Starting ro-discord-bot...');
     await this.login();
     this.replyChannel = this.client.channels.get(this.config.replyChannel);
     this.startScheduler();
+    await this.novaLogin();
     this.replyChannel.send(`Bear is ready!`);
   }
   
