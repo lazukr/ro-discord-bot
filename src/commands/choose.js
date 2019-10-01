@@ -1,5 +1,6 @@
 import Logger from '../utils/logger';
 import Command from '../utils/command';
+import getRandom from '../utils/random';
 
 export default class Choose extends Command {
   constructor(bot) {
@@ -28,13 +29,10 @@ export default class Choose extends Command {
       return reply;
     }
 
-    const chosen = list[choose(list.length)];
+    const chosen = list[getRandom(list.length)];
     const reply = `\`${chosen}\``;
     await message.channel.send(reply);
     return reply;
   }
 }
 
-function choose(max) {
-  return Math.floor(Math.random() * max);
-}
