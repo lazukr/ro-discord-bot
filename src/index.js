@@ -169,7 +169,6 @@ class RagnarokBot {
 
     this.client.on('reconnecting', rec => {
       this.logger.info(`Bear reconnecting`);
-      this.replyChannel.send(`Bear is attempting to reconnect...`); 
     });
 
     this.client.on('error', async (err) => {
