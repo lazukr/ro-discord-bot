@@ -72,8 +72,10 @@ export default class Bot {
     });
   }
  
-  async novaLogin() {
-    Scraper.login(this.novaCredentials);
+  async novaLogin() {  
+    await Scraper.login(this.novaCredentials);
+    const relogTime = 1000; // 2 * 24 * 60 * 60 * 1000; // 2 days;
+    setTimeout(this.novaLogin.bind(this), relogTime);
   }
 
   attachListeners() {

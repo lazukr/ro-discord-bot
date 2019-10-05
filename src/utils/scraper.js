@@ -29,7 +29,7 @@ export default class Scraper {
       followAllRedirects: true,  
     }
     
-    rp(options)
+    return rp(options)
       .then(res => {
         Logger.log('Nova login successful!');
       })
