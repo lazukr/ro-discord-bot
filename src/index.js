@@ -135,6 +135,8 @@ class RagnarokBot {
 
   async novaLogin() {
     await sc.login();
+    const relogTime = 2 * 24 * 60 * 60 * 1000 // 2 days;
+    setTimeout(this.novaLogin.bind(this), relogTime); 
   }
 
   async start() {
