@@ -1,5 +1,5 @@
 import Logger from '../utils/logger';
-import Nova from '../utils/nvro';
+import Nova, { MarketErrors } from '../utils/nvro';
 import PrettyPrinter from '../utils/prettyPrinter';
 
 export async function getSearch({
@@ -46,6 +46,15 @@ export async function getMarket({
 }) {
   Logger.log(`Getting market info on item: ${id}. With filters: ${JSON.stringify(filters)}`);
   const table = await Nova.getMarketData(id, filters);
+  
+  if (table.error === MarketErrors.NO_LOGIN) {
+    const reply = `\nBot was unable to login to Nova. Please contact Developer.`;
+    return {
+      reply: reply,
+      result: 1,
+    };
+  }
+    
   const reply = PrettyPrinter.tabulate(table);
   return reply;
 };

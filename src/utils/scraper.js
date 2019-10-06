@@ -1,6 +1,7 @@
 const rp = require('request-promise').defaults({jar: true});
 import cheerio from 'cheerio';
 import Logger from './logger';
+import config from '../../config.json';
 
 export const TABLE_TYPE = Object.freeze({
   DEFAULT: 0,
@@ -10,11 +11,10 @@ export const TABLE_TYPE = Object.freeze({
   VEND: 4,
 });
 
-
 // this function handles getting pages from websites.
 
 export default class Scraper {
-  static async login(credentials) {
+  static async login() {
     const options = {
       method: 'POST',
       uri: 'https://www.novaragnarok.com',
@@ -24,7 +24,7 @@ export default class Scraper {
       },
       form: {
         server: 'NovaRO',
-        ...credentials,
+        ...config.novaCredentials,
       },
       followAllRedirects: true,  
     }

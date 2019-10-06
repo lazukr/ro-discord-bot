@@ -7,6 +7,7 @@ import DataTable, { MarketDataTable } from './datatable';
 const URL = 'https://www.novaragnarok.com';
 const ITEM_SEARCH_TABLE = '#itemtable';
 const ITEM_DATA_TABLE = '.vertical-table';
+const LOGIN_BUTTON = 'input[type=submit]';
 
 export const MARKET_COLUMNS = Object.freeze({
   QUANTITY: "Qty",
@@ -16,6 +17,13 @@ export const MARKET_COLUMNS = Object.freeze({
   REFINE: "Refine",
   LOCATION: "Location",
 });
+
+export const MarketErrors = Object.freeze({
+  NO_ERRORS: 0,
+  NO_RESULT: 1,
+  NO_LOGIN: 2,
+});
+
 
 export default class NovaROUtils {
   static async getSearchData(name, pagenum) {
@@ -117,7 +125,7 @@ export default class NovaROUtils {
     };
   }
 
-  static async getMarketData(id, filters = {}) {
+  static async getMarketData(id, filters = {}, login = 0) {
     const qs = {
       module: "vending",
       action: "item",
@@ -125,12 +133,31 @@ export default class NovaROUtils {
     };
 
     const page = await Scraper.getPage(URL, qs);
+
+    const loginBtn = Scraper.getElement({
+      page: page,
+      selector: LOGIN_BUTTON,
+      index: 1,
+    }).attribs.value; 
+   
+    if (loginBtn === "Log In" && login) {
+      // alreadgy tried logging in but it didn't work.
+      return {
+        error: MarketErrors.NO_LOGIN,
+      }
+    }
+
+    if (loginBtn === "Log In" && !login) {
+      // we need to log in.
+      await Scraper.login();
+      return await NovaROUtils.getMarketData(id, filters, 1);
+    }
+
     const market = Scraper.getElement({
       page: page,
       selector: ITEM_SEARCH_TABLE,
       index: 0,
     });
-
 
     const table = Scraper.getTableContent({
       page: page,
@@ -157,6 +184,7 @@ export default class NovaROUtils {
       name: page(name).find('a').text().trim(),
       page: filters.PAGE,
       filters: filters, 
+      error: MarketErrors.NO_ERRORS,
     };
   }
 }
