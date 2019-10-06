@@ -114,17 +114,16 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
   
   //console.log(market);
 
-  //if (market.error == nvro.ERROR.UKNOWN && !silent) {
-  //  message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear does not know the unknown.\`\`\``);
-  //  return;
-  //}
+  if (market.error === nvro.ERROR.NO_LOGIN) {
+    message.channel.send(`Bot was unable to login.`);
+    return;
+  }
 
-
-  if (market.error == nvro.ERROR.NO_RESULT && !silent) {
+  if (market.error === nvro.ERROR.NO_RESULT && !silent) {
     message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nNo Results Found :(\`\`\``);
     return;
   }
-  
+ 
   market.table.intToStrCols(nvro.HEADERS.QTY);
   market.table.intToStrCols(nvro.HEADERS.PRICE);
   market.table.intToStrCols(nvro.HEADERS.REFINE);
@@ -144,6 +143,9 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
   
   message.channel.send(prettyTable.getPage(page, filters));
 }
+
+exports.getFromLive = getFromLive;
+
 
 exports.info = {
   name: "market",

@@ -133,18 +133,11 @@ class RagnarokBot {
     await this.loadListeners();
   }
 
-  async novaLogin() {
-    await sc.login();
-    const relogTime = 2 * 24 * 60 * 60 * 1000 // 2 days;
-    setTimeout(this.novaLogin.bind(this), relogTime); 
-  }
-
   async start() {
     this.logger.info('Starting ro-discord-bot...');
     await this.login();
     this.replyChannel = this.client.channels.get(this.config.replyChannel);
     this.startScheduler();
-    await this.novaLogin();
     this.replyChannel.send(`Bear is ready!`);
   }
   
