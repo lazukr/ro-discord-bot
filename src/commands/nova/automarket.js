@@ -210,7 +210,7 @@ exports.info = {
   category: "Nova",
   description: `This handles all the automarket queries. There are several sub commands to use. Here are an explanation of them all:
   clear: use this to clear all automarket entries.
-  list: use this to list all active automarket entries.
+  list <page number>: use this to list all active automarket entries. Use <page number> to see different pages.
   interval <value>: set how frequent it checks the market. <value> is in minutes.
   remove <index>: remove an entry based on the index given by the list.`,
   usage: `@automarket <item_ID> <any market parameters>
