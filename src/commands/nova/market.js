@@ -120,7 +120,7 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
   }
 
   if (market.error === nvro.ERROR.NO_RESULT && !silent) {
-    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nNo Results Found :(\`\`\``);
+    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.id} - ${market.name}\n\nNo Results Found :(\n\`\`\``);
     return;
   }
  
@@ -140,8 +140,9 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
     delete PREV_QUERIES[this.id];
     logger.info(`Previous query: ${this.id} removed.`);
   }.bind(prettyTable), TIME_INTERVAL);
-  
+
   message.channel.send(prettyTable.getPage(page, filters));
+
 }
 
 exports.getFromLive = getFromLive;
