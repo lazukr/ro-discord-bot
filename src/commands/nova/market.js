@@ -1,6 +1,7 @@
 const logger = require('logger.js')("Nova Command module: market");
 const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
+const objPrint = require('object-printer');
 
 const TIME_INTERVAL = 300000; // every 5 minutes
 
@@ -129,7 +130,7 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
   market.table.intToStrCols(nvro.HEADERS.REFINE);
   const prettyTable = new pp.PrettyTableFactory(market);
 
-  console.log(prettyTable);
+  objPrint(prettyTable);
 
   LAST_QUERY = prettyTable.id;
   PREV_QUERIES[LAST_QUERY] = {
