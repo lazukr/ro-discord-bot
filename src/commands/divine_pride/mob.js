@@ -10,15 +10,11 @@ exports.info = {
 };
 
 exports.run = async (discordBot, message, args) => {
-  logger.info(args);
-  const mob = await dp.getMob(args);
-
-  if (mob.error > 0) {
-    message.channel.send(`\`\`\`${dp.getErrorMessage(mob.error)}\`\`\``);
-    return;
-  }
+  args = args.join(' ').split(',');
+  args = args.map(i => i.trim());
   
-  message.channel.send(`\`\`\`${dp.mobPrint(mob)}\`\`\``);
-
+  logger.info(args);
+  
+  const mob = await dp.getData(message, args, dp.SEARCH.MOB);
 };
 

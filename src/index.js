@@ -3,7 +3,7 @@ const util = require('util');
 const fs = require('fs');
 const path = require('path');
 const Enmap = require('enmap');
-
+const sc = require('scrape-commons');
 const readdir = util.promisify(fs.readdir);
 const CONFIG = require('./config.json');
 const LOGGER = require('logger.js');
@@ -133,7 +133,6 @@ class RagnarokBot {
     await this.loadListeners();
   }
 
-
   async start() {
     this.logger.info('Starting ro-discord-bot...');
     await this.login();
@@ -163,7 +162,6 @@ class RagnarokBot {
 
     this.client.on('reconnecting', rec => {
       this.logger.info(`Bear reconnecting`);
-      this.replyChannel.send(`Bear is attempting to reconnect...`); 
     });
 
     this.client.on('error', async (err) => {
