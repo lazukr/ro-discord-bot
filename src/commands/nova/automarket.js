@@ -113,13 +113,45 @@ async function setInterval(message, bot, interval) {
 
 async function addAutomarket(message, bot, args) {
 
-  const itemID = parseInt(args.shift());
-  if (!itemID || itemID < 100) {
+  args = args.join(' ').split(',');
+  args = args.map(i => i.trim());
+
+  let item = args.shift();
+  let itemID = 0;
+
+
+  if (isNaN(item)) {
+    const search = await nvro.getSearchData(item);
+    if (search.error == nvro.ERROR.NO_RESULT) {
+      message.channel.send(`\`\`\`${pp.HIGHTLIGHT}\n${search.name}\n\nNo results for this. Automarket could not be added.\`\`\``);
+      return;
+    }
+
+    if (search.table.contents.length > 1) {
+      args.shift();
+      const filters = nvro.getFilters(args);
+      message.channel.send(`\`\`\`${pp.HIGHLIGHT}\nThe name search has returned multiple results, please be more specific.\`\`\``);
+      const page = filters.page;
+      const prettyTable = new pp.PrettyTableFactory(search);
+      message.channel.send(prettyTable.getPage(page));
+      return;
+    }
+    
+    if (search.table.contents.length === 1) {
+      itemID = search.table.contents[0].Id;
+      item = search.table.contents[0].Name;
+    }
+
+  } else if (!item || item < 100) {
     invalidInput(message, ERRNUM.NAONI);
     return;
-  }
-
-  //const market = await nvro.getLiveMarketData(itemID);
+  } else {
+    itemID = parseInt(item);
+    const market = await nvro.getLiveMarketData(itemID);
+    item = market.name; 
+  } 
+ 
+  //const market = await nvro.getLiveMarketData(itemIDID);
 
   //if (market.error == nvro.ERROR.UNKNOWN) {
   //  message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear cannot automarket the unknown.\`\`\``);
@@ -141,6 +173,7 @@ async function addAutomarket(message, bot, args) {
     interval: interval,
     itemID: itemID,
     filters: filters,
+    name: item,
   }
   
   const automarketItem = await bot.scheduler.add(props);
@@ -148,11 +181,12 @@ async function addAutomarket(message, bot, args) {
     invalidInput(message, ERRNUM.FA);
     return; 
   }
-  
-  logger.info(`automarket for itemID ${itemID} set for ${interval} minute${interval ? "s" : ""}`);
+ 
+  const fullItemID = isNaN(item) ? `${itemID} - ${item}` : itemID;
+  logger.info(`automarket for itemID ${fullItemID} set for ${interval} minute${interval ? "s" : ""}`);
   
   const replyStringArray = [];
-  replyStringArray.push(`Bear will query market for itemID \`${itemID}\``);
+  replyStringArray.push(`Bear will query market for itemID \`${fullItemID}\``);
   if (filters[nvro.HEADERS.PRICE]) {
     const price = `${filters[nvro.HEADERS.PRICE].toLocaleString()}z`;
     replyStringArray.push(`at price \`${price}\``);
@@ -176,21 +210,18 @@ exports.info = {
   category: "Nova",
   description: `This handles all the automarket queries. There are several sub commands to use. Here are an explanation of them all:
   clear: use this to clear all automarket entries.
-  list: use this to list all active automarket entries.
+  list <page number>: use this to list all active automarket entries. Use <page number> to see different pages.
   interval <value>: set how frequent it checks the market. <value> is in minutes.
   remove <index>: remove an entry based on the index given by the list.`,
   usage: `@automarket <item_ID> <any market parameters>
-  A market parameter can be prefixed with "!" to indicate the negative case (i.e. do not include).
-  It can also be fine tuned by using commas without spaces to look for multiple things within a particular paramter.
+  It can also be fine tuned by:
+    - using spaces to match multiple parameters within a property
+    - using commas to match multiple parameters in distinct properties
   For example:
     - !am 2964 matk 3%
-      * Find item 2974 with properties that contain "matk" AND "3%" (they can be on the same property or different ones)
-    - !am 2964 matk,3%
-      * Find item 2974 with a property that contains "matk" AND "3%"
-    - !am 2964 !matk,3% 
-      * Find item 2974 with a property that contains no "matk" BUT does contain "3%"
-    - !am 2964 !matk,!3% 
-      * Find item 2974 with a property that contains neither "matk" NOR "3%"
-    - !am 2964 matk,3% matk,2% 
-      * Find item 2974 with a property that contains "matk" AND "2%" AND a property that contains "matk" AND "3%"`,
+      * Find item 2974 with a property that contains both "matk" and "3%" 
+    - !am 2964 matk, 3%
+      * Find item 2974 with two separate properties that contains "matk" and "3%" respectively
+    - !am 2964 matk 3%, matk 2% 
+      * Find item 2974 with a property that contains "matk" and "2%" AND a second property that contains "matk" and "3%"`,
 };

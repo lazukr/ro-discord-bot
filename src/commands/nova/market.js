@@ -1,6 +1,7 @@
 const logger = require('logger.js')("Nova Command module: market");
 const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
+const objPrint = require('object-printer');
 
 const TIME_INTERVAL = 300000; // every 5 minutes
 
@@ -12,8 +13,11 @@ const ERRNUM = Object.freeze({
 });
 
 exports.run = async (discordBot, message, args) => {
-  logger.info(args);
-
+  args = args.join(' ').split(',');
+  args = args.map(i => i.trim());
+  
+  console.log(args);
+  
   // No arguments Case
   if (args.length === 0) {
     invalidInput(message, ERRNUM.NAS);
@@ -22,8 +26,7 @@ exports.run = async (discordBot, message, args) => {
   
   // handles searching 
   if (isNaN(args[0])) {
-    const filters = nvro.getFilters(args);
-    doSearch(message, filters);
+    doSearch(message, args);
     return;
   }
   
@@ -43,17 +46,27 @@ function invalidInput(message, errnum) {
   }
 }
 
-async function doSearch(message, filters) {
+async function doSearch(message, args) {
   logger.info("Search");
-
-  const page = filters.page;
-  const args = filters[nvro.HEADERS.ADDPROPS];
-  const search = await nvro.getSearchData(args);
-  
+  const name = args[0];
+  const search = await nvro.getSearchData(name);
   if (search.error == nvro.ERROR.NO_RESULT) {
     message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${search.name}\n\nNo Results Found :(\`\`\``);
     return;
   }
+
+
+  args.shift();
+  const filters = nvro.getFilters(args);
+
+  if (search.table.contents.length === 1) {
+    const itemID = search.table.contents[0].Id;
+    console.log(itemID);
+    doItemId(message, itemID, filters);
+    return; 
+  }
+
+  const page = parseInt(args[0]) || 1;
   const prettyTable = new pp.PrettyTableFactory(search);
   message.channel.send(prettyTable.getPage(page));
 }
@@ -100,23 +113,25 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
   
   const market = await nvro.getLiveMarketData(itemId);
   
-  console.log(market);
+  //console.log(market);
 
-  //if (market.error == nvro.ERROR.UKNOWN && !silent) {
-  //  message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nBear does not know the unknown.\`\`\``);
-  //  return;
-  //}
-
-
-  if (market.error == nvro.ERROR.NO_RESULT && !silent) {
-    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.name}\n\nNo Results Found :(\`\`\``);
+  if (market.error === nvro.ERROR.NO_LOGIN) {
+    message.channel.send(`Bot was unable to login.`);
     return;
   }
-  
+
+  if (market.error === nvro.ERROR.NO_RESULT && !silent) {
+    message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.id} - ${market.name}\n\nNo Results Found :(\n\`\`\``);
+    return;
+  }
+ 
   market.table.intToStrCols(nvro.HEADERS.QTY);
   market.table.intToStrCols(nvro.HEADERS.PRICE);
   market.table.intToStrCols(nvro.HEADERS.REFINE);
   const prettyTable = new pp.PrettyTableFactory(market);
+
+  objPrint(prettyTable);
+
   LAST_QUERY = prettyTable.id;
   PREV_QUERIES[LAST_QUERY] = {
     table: prettyTable,
@@ -126,9 +141,13 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
     delete PREV_QUERIES[this.id];
     logger.info(`Previous query: ${this.id} removed.`);
   }.bind(prettyTable), TIME_INTERVAL);
-  
+
   message.channel.send(prettyTable.getPage(page, filters));
+
 }
+
+exports.getFromLive = getFromLive;
+
 
 exports.info = {
   name: "market",
@@ -138,7 +157,7 @@ exports.info = {
   usage: "\n\n" +
   "\tSearch who sells by itemID:\n" +
   "\t\t@market #itemID \n\n" + 
-  "\tSearch for itemID by name: \n" +
+  "\tSearch for itemID by name. If the name is the only result, it will automatically search it as if it was an itemID: \n" +
   "\t\t@market [item name] \n\n",
 };
 
