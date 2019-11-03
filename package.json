@@ -7,12 +7,14 @@
   "author": "lazukr <peterh10201@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "NODE_ENV=production node ./src/index.js",
-    "dev-start": "NODE_ENV=development node ./src/index.js",
-    "test": "node ./src/test.js",
-    "add-user": "node ./src/adduser.js"
+    "start": "node src/index.js",
+    "debug": "node --inspect src/index.js",
+    "test": "jest --silent",
+    "test-verbose": "jest",
+    "am-test": "node --inspect tests/all.test.js"
   },
   "dependencies": {
+<<<<<<< HEAD
     "cheerio": "^1.0.0-rc.2",
     "discord.js": "^11.5.1",
     "enmap": "^0.4.2",
@@ -30,5 +32,23 @@
     "winston": "^2.4.0",
     "ws": "3.3.2",
     "yarn": "^1.19.0"
+=======
+    "chalk": "^2.4.2",
+    "cheerio": "^1.0.0-rc.3",
+    "discord.js": "^11.5.1",
+    "fs": "^0.0.1-security",
+    "moment": "^2.24.0",
+    "mongodb": "^3.3.0-beta2",
+    "nan": "^2.14.0",
+    "node": "^12.7.0",
+    "node-cron": "^2.0.3",
+    "request-promise": "^4.2.4",
+    "util": "^0.12.1"
+  },
+  "devDependencies": {
+    "@airbnb/node-memwatch": "^1.0.2",
+    "esm": "^3.2.25",
+    "jest": "^24.8.0"
+>>>>>>> rewrite
   }
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const Discord = require('discord.js');
 const util = require('util');
 const fs = require('fs');
@@ -186,3 +187,7 @@ async function botboot() {
 }
 
 botboot();
+=======
+require = require("esm")(module);
+module.exports = require("./main.js");
+>>>>>>> rewrite

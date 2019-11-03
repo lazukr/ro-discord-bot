@@ -1,21 +1,38 @@
-const logger = require('logger.js')("Event Module: Message");
-module.exports = (discordBot, message) => {
-  // ignore bots
-  if (message.author.bot) return;
-  // ignore all messages that does not begin
-  // with the command prefix defined in the config
-  if (message.content.indexOf(discordBot.config.commandPrefix) !== 0) return;
-  const args = message.content.slice(discordBot.config.commandPrefix.length).trim().split(/ +/g);
-  const commandKey = args.shift().toLowerCase();
-  const command = discordBot.commandList.get(commandKey) || discordBot.commandAliasList.get(commandKey);
-  if (!command) {
-    logger.debug(`${commandKey} was not loaded or not found.`);
-    message.channel.send(`${commandKey} was not loaded or not found. Please use \`${discordBot.config.commandPrefix}command\` to see a list of the commands`);
-    return;
+import Logger from '../utils/logger';
+import chalk from 'chalk'; 
+
+export default class Message {
+  constructor(bot) {
+    this.bot = bot;
   }
-  logger.info(`${message.author.username}(${message.author.id}) ran command ${command.cmd.info.name} with arguments: ${args}`);
-  command.cmd.run(discordBot, message, args)
-    .catch(err => {
-      logger.error(err);
-    });
-};
+
+  async run (message) {
+
+    // avoid responding to bots
+    if (message.author.bot) {
+      return;
+    }
+
+    // avoid any message that does not start with the designated prefix
+    if (message.content.indexOf(this.bot.prefix) !== 0) {
+      return;
+    }
+
+    // decode the message so that we get the command name and an array of the arguments defined
+    const args = message.content.slice(this.bot.prefix.length).trim().split(/ +/g);
+    const commandName = args.shift().toLowerCase();
+
+    // try to find the command
+    const command = this.bot.commands.get(commandName) ||
+      this.bot.commands.get(this.bot.aliases.get(commandName));
+    if (!command) {
+      Logger.warn(`Command "${commandName}" was not found.`);
+      return;
+    }
+
+    const username = `${message.author.username}(${message.author.id})`;
+
+    Logger.log(`${chalk.cyan(username)} ran the command ${chalk.cyan(commandName)} with arguments: ${chalk.cyan(args)}`);
+    command.run(message, args); 
+  }
+}
