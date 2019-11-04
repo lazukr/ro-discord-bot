@@ -55,7 +55,11 @@ exports.run = async (discordBot, message, args) => {
       }
       await setInterval(message, discordBot, interval);
       return;
-   
+
+    // invokes --all
+    case `--${tf.CMD.ALL}`:
+      await getAll(message, discordBot, 1);
+      return;
     // invokes automarket adding 
     default:
       await addAutomarket(message, discordBot, args);
@@ -78,6 +82,35 @@ function invalidInput(message, errnum) {
       message.channel.send(`Not a valid zeny value.`);
       return;
   }
+}
+
+async function getAll(message, bot, page) {
+  logger.info(`Getting All for ${message.author.id}`);
+  const list = await bot.scheduler._getAutoMarketList(message.author.id);
+  
+  if (!list) {
+    message.channel.send("```\nNo automarkets\n```");
+    return;
+  }
+
+  let curMsg = "";
+  const printList = [];
+  
+  for (let i = 0; i < list.length; i++) {
+
+    if ((curMsg + list[i]).length > 2000) {
+      printList.push(curMsg);
+      curMsg = list[i];
+    } else if (i === list.length - 1) {
+      printList.push(curMsg);
+    } else {
+      curMsg += list[i];
+    }
+  }
+  
+  printList.forEach(msg => {
+    message.channel.send(msg);
+  });
 }
 
 async function clear(message, bot) {
@@ -209,10 +242,16 @@ exports.info = {
   alias: "am",
   category: "Nova",
   description: `This handles all the automarket queries. There are several sub commands to use. Here are an explanation of them all:
+
   clear: use this to clear all automarket entries.
+
   list <page number>: use this to list all active automarket entries. Use <page number> to see different pages.
+  
   interval <value>: set how frequent it checks the market. <value> is in minutes.
-  remove <index>: remove an entry based on the index given by the list.`,
+  
+  remove <index>: remove an entry based on the index given by the list.
+  
+  all: queries every automarket owned by you all at once. It may take some time to reply.\n`,
   usage: `@automarket <item_ID> <any market parameters>
   It can also be fine tuned by:
     - using spaces to match multiple parameters within a property

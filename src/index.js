@@ -138,6 +138,7 @@ class RagnarokBot {
     await this.login();
     this.replyChannel = this.client.channels.get(this.config.replyChannel);
     this.startScheduler();
+    await sc.login();
     this.replyChannel.send(`Bear is ready!`);
   }
   
