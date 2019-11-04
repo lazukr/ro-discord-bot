@@ -109,7 +109,12 @@ async function getAll(message, bot, page) {
       printList.push(curMsg);
     }
   }
-  
+
+  if (printList.length === 0) {
+    message.channel.send("```\nNo automarkets for filters.\n```");
+    return;
+  }
+
   printList.forEach(msg => {
     message.channel.send(msg);
   });
