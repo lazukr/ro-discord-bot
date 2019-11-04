@@ -101,10 +101,12 @@ async function getAll(message, bot, page) {
     if ((curMsg + list[i]).length > 2000) {
       printList.push(curMsg);
       curMsg = list[i];
-    } else if (i === list.length - 1) {
-      printList.push(curMsg);
     } else {
       curMsg += list[i];
+    }
+
+    if (i === list.length - 1) {
+      printList.push(curMsg);
     }
   }
   
