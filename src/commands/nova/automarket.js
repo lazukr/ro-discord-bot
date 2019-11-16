@@ -129,7 +129,12 @@ async function clear(message, bot) {
 async function list(message, bot, page) {
   logger.info("Listing...");
   const list = await bot.scheduler.getAutoMarketList(page);
-  message.channel.send(list);
+  message
+    .channel
+    .send(list)
+    .catch(err => {
+      message.channel.send(err.message);
+    });
 }
 
 async function remove(message, bot, entry) {

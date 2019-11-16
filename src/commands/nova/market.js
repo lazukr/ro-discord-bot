@@ -68,7 +68,7 @@ async function doSearch(message, args) {
 
   const page = parseInt(args[0]) || 1;
   const prettyTable = new pp.PrettyTableFactory(search);
-  message.channel.send(prettyTable.getPage(page));
+  sendMessage(message.channel, prettyTable.getPage(page));
 }
 
 async function doItemId(message, itemId, filters = {}) {
@@ -91,7 +91,7 @@ function getFromLast(message, page, filters) {
   const msg = PREV_QUERIES[LAST_QUERY];
   if (msg) {
     logger.info("Getting from last...");
-    message.channel.send(msg.table.getPage(page, filters));
+    sendMessage(message.channel, msg.table.getPage(page, filters));
     return;
   }
   message.channel.send(`\`\`\`\n Last query is emtpy.\n\`\`\``);
@@ -102,7 +102,8 @@ function getFromPrevious(message, itemId, page, filters) {
   const msg = PREV_QUERIES[LAST_QUERY];
   if (msg) {
     logger.info("Getting from previous...");
-    message.channel.send(msg.table.getPage(page, filters));
+    
+    sendMessage(message.channel, msg.table.getPage(page, filters));
     return;
   }
   message.channel.send(`\`\`\`\n Previous query did not exist.\n\`\`\``);
@@ -142,11 +143,20 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
     logger.info(`Previous query: ${this.id} removed.`);
   }.bind(prettyTable), TIME_INTERVAL);
 
-  message.channel.send(prettyTable.getPage(page, filters));
+  const msg = prettyTable.getPage(page, filters);
 
+  sendMessage(message.channel, msg);
 }
 
 exports.getFromLive = getFromLive;
+
+function sendMessage(channel, message) {
+  channel
+    .send(message)
+    .catch(err => {
+      channel.send(err.message);
+    });
+}
 
 
 exports.info = {
