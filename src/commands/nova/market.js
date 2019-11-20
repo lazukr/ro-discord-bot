@@ -3,7 +3,7 @@ const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
 const objPrint = require('object-printer');
 
-const TIME_INTERVAL = 300000; // every 5 minutes
+const TIME_INTERVAL = 120000; // every 2 minutes
 
 const PREV_QUERIES = {};
 let LAST_QUERY = 0;
@@ -79,8 +79,8 @@ async function doItemId(message, itemId, filters = {}) {
     page = itemId;
     getFromLast(message, page, filters);
   
-  } else if (PREV_QUERIES.hasOwnProperty(itemId)) {  // previous
-    getFromPrevious(message, itemId, page, filters);
+  //} else if (PREV_QUERIES.hasOwnProperty(itemId)) {  // previous
+  //  getFromPrevious(message, itemId, page, filters);
   
   } else {
     getFromLive(message, itemId, page, filters);             // live
@@ -91,7 +91,7 @@ function getFromLast(message, page, filters) {
   const msg = PREV_QUERIES[LAST_QUERY];
   if (msg) {
     logger.info("Getting from last...");
-    sendMessage(message.channel, msg.table.getPage(page, filters));
+    sendMessage(message.channel, msg.table.getPage(page, msg.filters));
     return;
   }
   message.channel.send(`\`\`\`\n Last query is emtpy.\n\`\`\``);
@@ -165,8 +165,10 @@ exports.info = {
   category: "Nova",
   description: "Use this command to get current items sold in Nova, or look for items in Nova.",
   usage: "\n\n" +
-  "\tSearch who sells by itemID:\n" +
-  "\t\t@market #itemID \n\n" + 
+  "\tSearch who sells by itemID. This result is cached for 2 minutes.:\n" +
+  "\t\t@market #itemID \n\n" +
+  "\tSearch a multi-page result using the cached result. If you wish to refresh it, redo the search command:\n" +
+  "\t\t@market [page #] \n\n" +
   "\tSearch for itemID by name. If the name is the only result, it will automatically search it as if it was an itemID: \n" +
   "\t\t@market [item name] \n\n",
 };
