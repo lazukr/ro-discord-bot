@@ -4,8 +4,19 @@ const taskFactory = new tf.TaskFactory();
 const dt = require('data-tables');
 
 
+
+
 const channel = {
-  send: (input) => console.log(input),
+  send: (input) => {
+    return new Promise((res, rej) => { 
+      if (input.length < 2000) {
+        console.log(input);
+        res("Successfully logged");
+      } else {
+        rej("error hi");
+      }
+    })
+  },
 };
 
 const itemData = {
@@ -62,7 +73,9 @@ const greaterThan2 = {
 };
 
 const noResults = {
-  error: nvro.ERROR.NO_RESULTS,  
+  error: nvro.ERROR.NO_RESULT,  
+  id: itemData.id,
+  name: itemData.name,
 };
 
 const noFilteredResults = {
