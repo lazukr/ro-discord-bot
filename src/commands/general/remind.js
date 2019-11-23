@@ -118,5 +118,11 @@ exports.info = {
   "\tTo remove the xth entry off the list:\n" +
   "\t\t@remind --remove #x\n\n" +
   "\tTo clear all entries\n" +
-  "\t\t@remind --clear\n\n"
+  "\t\t@remind --clear\n\n" +
+  "\tThe list of times:\n" +
+  "\t\tseconds: s, sec, secs\n" +
+  "\t\tminutes: m, min, mins\n" +
+  "\t\thours: h, hr, hrs\n" +
+  "\t\tdays: d, day, days\n" +
+  "\t\tweeks: w, wk, wks\n"
 };

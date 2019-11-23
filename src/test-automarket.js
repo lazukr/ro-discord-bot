@@ -20,8 +20,8 @@ const channel = {
 };
 
 const itemData = {
-  id: 984,
-  name: 'Oridecon',
+  id: 9841221,
+  name: 'Oridecon012345678901234567890123456789012345678901',
 };
 
 const testItem = {
@@ -70,6 +70,12 @@ const greaterThan2 = {
   Price: '40000',
   Qty: '50',
   Location: 'greater-than2',
+};
+
+const fillTest = {
+  Price: '25000',
+  Qty: '1234512345',
+  Location: 'hellohellohellohellohellohellohellohellohellohellohellohellohellohellohel',
 };
 
 const noResults = {
@@ -130,7 +136,33 @@ const filteredResults3 = {
   name: itemData.name,
 };
 
-
+const fillTestResults = {
+  error: nvro.ERROR.NONE,
+  table: new dt.MarketTable(header, [
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+    fillTest,
+  ]),
+  id: itemData.id,
+  name: itemData.name,
+};
 
 const amTask = taskFactory.getTask(props);
 
@@ -161,5 +193,7 @@ async function test() {
   await amTask.process(channel, noFilteredResults2);
   console.log('\n\n - No Results 4\n\n');
   await amTask.process(channel, noResults); 
+  console.log('\n\n - Fill Test \n\n');
+  await amTask.process(channel, fillTestResults);
 }
 test();
