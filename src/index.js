@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const Enmap = require('enmap');
 const sc = require('scrape-commons');
+const nvro = require('nova-market-commons');
 const readdir = util.promisify(fs.readdir);
 const CONFIG = require('./config.json');
 const LOGGER = require('logger.js');
@@ -133,6 +134,16 @@ class RagnarokBot {
     await this.loadListeners();
   }
 
+  checkPopService() {
+    const checkPopService = setInterval(async () => {
+        const pop = await nvro.getPopulation();
+        
+        if (parseInt(pop) < 2000) {
+            this.replyChannel.send(pop);
+        }
+    }, 60000); 
+  }
+
   async start() {
     this.logger.info('Starting ro-discord-bot...');
     await this.login();
@@ -140,6 +151,7 @@ class RagnarokBot {
     this.startScheduler();
     await sc.login();
     this.replyChannel.send(`Bear is ready!`);
+    this.checkPopService();
   }
   
   startScheduler() {
