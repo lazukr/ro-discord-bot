@@ -3,6 +3,7 @@ const logger = require('logger.js')("Nova Command module: Automarket");
 const tf = require('task-factory');
 const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
+const sc = require('scrape-commons');
 const ERRNUM = Object.freeze({
   NAS: 1, // no args
   NAONI: 2, // no args or not int
@@ -61,6 +62,12 @@ exports.run = async (discordBot, message, args) => {
       await getAll(message, discordBot, 1);
       return;
     // invokes automarket adding 
+
+    // sets the session
+    case `--session`:
+      await setSession(message, args[1]);
+      return;
+
     default:
       await addAutomarket(message, discordBot, args);
       return;
@@ -154,6 +161,27 @@ async function setInterval(message, bot, interval) {
   logger.info("Updating interval...");
   await bot.scheduler.setCronInterval(interval);
   message.channel.send(`Set automarket check interval to every ${interval} minute${interval == 1 ? "" : "s"}.`);
+}
+
+async function setSession(message, session = null) {
+
+  if (!session) {
+    message.channel.send(`Please provide session key`);
+    return;
+  }
+
+  logger.info("Setting Automarket Session...");
+  tf.AutoMarketTask.session = session;
+  logger.info(tf.AutoMarketTask.session);
+  const loginResult = await sc.login();
+  console.log(loginResult);
+
+  if (!loginResult) {
+    message.channel.send(`The session didn't work! Try again.`);
+    return;
+  }
+
+  message.channel.send(`Session has been set!`);
 }
 
 async function addAutomarket(message, bot, args) {

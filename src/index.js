@@ -11,6 +11,7 @@ const LOGGER = require('logger.js');
 const Scheduler = require('task-scheduler.js');
 // bot constants
 const LIVE_STORAGE = 'src/liveSchedulerDB';
+const POP_CHECK = 2000;
 
 class RagnarokBot {
   constructor(logger, config) {
@@ -19,6 +20,7 @@ class RagnarokBot {
     this.commandList = new Enmap();
     this.commandAliasList = new Enmap();
     this.client = new Discord.Client;
+    this.prevPop = POP_CHECK + 1;
   }
 
   // loads all events that the bot can handle.
@@ -134,14 +136,22 @@ class RagnarokBot {
     await this.loadListeners();
   }
 
+  async popCheck() {
+    const pop = await nvro.getPopulation();
+
+    if (parseInt(pop) < POP_CHECK && this.prevPop > POP_CHECK) {
+        this.replyChannel.send(pop);
+    }
+
+    if (parseInt(pop) > POP_CHECK && this.prevPop < POP_CHECK) {
+      this.replyChannel.send(pop);
+    }
+    this.prevPop = pop;    
+
+  }
+
   checkPopService() {
-    const checkPopService = setInterval(async () => {
-        const pop = await nvro.getPopulation();
-        
-        if (parseInt(pop) < 2000) {
-            this.replyChannel.send(pop);
-        }
-    }, 60000); 
+    setInterval(async function () { this.popCheck()}.bind(this), 60000); 
   }
 
   async start() {
