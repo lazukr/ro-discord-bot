@@ -14,25 +14,6 @@
     "am-test": "node --inspect tests/all.test.js"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "cheerio": "^1.0.0-rc.2",
-    "discord.js": "^11.5.1",
-    "enmap": "^0.4.2",
-    "enmap-level": "^1.0.0",
-    "googleapis": "^43.0.0",
-    "moment": "^2.22.2",
-    "moment-timezone": "^0.5.21",
-    "nan": "git+https://github.com/nodejs/nan.git",
-    "node-persist": "^3.0.1",
-    "node-schedule": "^1.3.0",
-    "readline": "^1.3.0",
-    "request": "^2.85.0",
-    "request-promise": "^4.2.2",
-    "uuid": "^3.3.2",
-    "winston": "^2.4.0",
-    "ws": "3.3.2",
-    "yarn": "^1.19.0"
-=======
     "chalk": "^2.4.2",
     "cheerio": "^1.0.0-rc.3",
     "discord.js": "^11.5.1",
@@ -49,6 +30,5 @@
     "@airbnb/node-memwatch": "^1.0.2",
     "esm": "^3.2.25",
     "jest": "^24.8.0"
->>>>>>> rewrite
   }
 }
