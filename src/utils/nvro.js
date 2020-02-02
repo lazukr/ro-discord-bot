@@ -125,34 +125,20 @@ export default class NovaROUtils {
     };
   }
 
-  static async getMarketData(id, filters = {}, login = 0) {
+  static async getMarketData(id, filters = {}) {
     const qs = {
       module: "vending",
       action: "item",
       id: id,
     };
 
-    const page = await Scraper.getPage(URL, qs);
-
-    const loginBtn = Scraper.getElement({
-      page: page,
-      selector: LOGIN_BUTTON,
-      index: 1,
-    }).attribs.value; 
-   
-    if (loginBtn === "Log In" && login) {
-      // alreadgy tried logging in but it didn't work.
+    if (!Scraper.login()) {
       return {
         error: MarketErrors.NO_LOGIN,
       }
     }
 
-    if (loginBtn === "Log In" && !login) {
-      // we need to log in.
-      await Scraper.login();
-      return await NovaROUtils.getMarketData(id, filters, 1);
-    }
-
+    const page = await Scraper.getPage(URL, qs);
     const market = Scraper.getElement({
       page: page,
       selector: ITEM_SEARCH_TABLE,

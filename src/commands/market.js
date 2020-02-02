@@ -3,6 +3,7 @@ import Command from "../utils/command";
 import Nova, { MARKET_COLUMNS } from "../utils/nvro";
 import PrettyPrinter from "../utils/prettyPrinter";
 import { getSearch, getMarket } from "../utils/nvrocmd";
+import Scraper from "../utils/scraper";
 
 const FINDER = Object.freeze({
   REFINE: /^<?\+\d{1,2}$/,
@@ -33,6 +34,22 @@ export default class NovaMarket extends Command {
 
     console.log(args);
 
+    if (! await Scraper.login() && !silent) {
+      const result = await this.bot.scheduler.insert({
+        channelid: message.channel.id,
+        command: "marketqueue",
+        owner: message.author.id,
+        args: `${JSON.stringify(args)}`,
+      });
+
+      if (!result.result.ok) {
+        Logger.log(`Unable to insert entry: ${result}`);
+      }
+
+      await message.channel.send(`Could not query market as the bot is not logged in. The developer has been notified. Once logged in, it will process the query.`);
+      return;
+    }
+
     // transform arguments so that the array is comma separated
     args = args
       .join(" ")
@@ -62,6 +79,7 @@ export default class NovaMarket extends Command {
     }
 
     // valid id. Search for it in the market.
+
     const id = args.shift(); 
     const filters = getFilters(args);
     const { reply, result } = await getMarket({
@@ -69,12 +87,10 @@ export default class NovaMarket extends Command {
       filters: filters,
     });
 
-    if (!result && silent) {
-      Logger.log(reply);
-      return;
+    if (!silent) {
+      await message.channel.send(`${message.author.toString()}${reply}`);
     }
-
-    await message.channel.send(`${message.author.toString()}${reply}`);
+    
     Logger.log(reply);
     return reply;
   }

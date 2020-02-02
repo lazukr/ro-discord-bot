@@ -17,6 +17,7 @@ export default class Bot {
     prefix,
     subprefix,
     aminterval,
+    admin,
   }) {
     this.aminterval = aminterval;
     this.token = token;
@@ -29,6 +30,8 @@ export default class Bot {
     this.logger = Logger;
     this.client = new Discord.Client();
     this.scheduler = new Scheduler(this, dburl);
+    this.admin = admin;
+    Scraper.bot = this;
   }
 
   async loadEvents() {
