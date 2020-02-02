@@ -4,6 +4,7 @@ import Nova from "../utils/nvro";
 import PrettyPrinter from "../utils/prettyPrinter";
 import DataTable from "../utils/datatable";
 import { getFilters } from "./market";
+import Scraper from "../utils/scraper";
 
 export default class NovaAutoMarket extends Command {
   constructor(bot) {
@@ -16,7 +17,7 @@ export default class NovaAutoMarket extends Command {
       `${bot.prefix}automarket ${bot.subprefix}clear`,
       aliases: ["am"],
       category: "Nova",
-      subCommands: ["list", "clear", "remove"],
+      subCommands: ["list", "clear", "remove", "session"],
     });
   }
 
@@ -85,6 +86,7 @@ export default class NovaAutoMarket extends Command {
       owner: message.author.id,
       itemid: datatable.table.id,
       name: datatable.name,
+      result: "",
       args: `${JSON.stringify(args)}`,
     });
 
@@ -92,7 +94,7 @@ export default class NovaAutoMarket extends Command {
 
     if (result.result.ok) {
       Logger.log("Successfully queued!");
-      const reply = `Automarket queued for ${datatable.name} with the following filters: ${args.slice(1).join(",")}`;
+      const reply = `Automarket queued for ${datatable.name ? datatable.name : datatable.table.id} with the following filters: ${args.slice(1).join(",")}`;
       await message.channel.send(reply);
       return reply;
     }
@@ -124,8 +126,10 @@ export default class NovaAutoMarket extends Command {
       owner: message.author.id,
     });
 
-    Logger.log(JSON.stringify(list));
-
+    list.forEach(item => {
+      item.result = undefined;
+      Logger.log(JSON.stringify(item));
+    });
 
     const header = {
       id: "#",
@@ -226,4 +230,31 @@ export default class NovaAutoMarket extends Command {
     await message.channel.send(`The following automarket were removed from ${message.author.username}'s automarket.\n${reply}`);
     return reply; 
   }
+
+  async session(message, args) {
+      if (!args.length) {
+        message.channel.send(`Please include a session key.`);
+        return;
+      }
+
+      console.log(args);
+
+      const session = args[0];
+      console.log(session);
+
+      Scraper.session = session;
+
+      const loginResult = await Scraper.login(session);
+      if (!loginResult) {
+        message.channel.send(`The session key did not work! Try again!`);
+        return;
+      }
+
+      //Scraper.session = session;
+      message.channel.send(`Session has been set!`);
+
+      await this.bot.scheduler.processQueues();
+
+  }
+
 }

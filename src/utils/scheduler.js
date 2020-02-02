@@ -1,6 +1,8 @@
 import MongoClient from 'mongodb';
 import Logger from './logger';
 import cron from 'node-cron';
+import Scraper from './scraper';
+import Nova from "../utils/nvro";
 
 export default class Scheduler {
   constructor(bot, url) {
@@ -14,7 +16,7 @@ export default class Scheduler {
     this.collection = db.collection('jobs');
 
     // begin the scheduler
-    cron.schedule(`0 */${this.bot.aminterval} * * * *`, async () => {
+    cron.schedule(`0 */1 * * * *`, async () => {
       await this.processAutomarkets();
     });
 
@@ -23,11 +25,64 @@ export default class Scheduler {
       command: "market",
     });
     automarketEntries.forEach(am => {
-      Logger.log(JSON.stringify(am));
+      const { channelid, owner, args, _id, itemid, } = am;
+      Logger.log(`id=${_id} owner=${owner} channelid=${channelid} itemid=${itemid} args=${args}`);
     });
+
+    Logger.log("Market Queues");
+    const automarketqueueEntries = await this.list({
+      command: "marketqueue",
+    });
+    automarketqueueEntries.forEach(amq => {
+      Logger.log(JSON.stringify(amq));
+    });  
+  }
+
+  async processQueues() {
+    const marketQueueList = await this.list({
+      command: "marketqueue",
+    });
+
+    const marketCmd = this.bot.commands.get("market");
+    await Promise.all(marketQueueList.map(async (entry) => {
+      Logger.log(`Processing market queues ${JSON.stringify(entry)}`);
+      const { channelid, owner, args } = entry;
+      const message = {
+        channel: this.bot.client.channels.get(channelid),
+        author: this.bot.client.users.get(owner),
+      };
+      const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
+      await marketCmd.run(message, originalArgs);
+    }));
+
+    await this.clear({
+      command: "marketqueue",
+    });
+
+    const marketList = await this.list({
+      command: "market",
+    });
+
+    const noNames = marketList.filter((entry) => !entry.name);
+
+
+    await Promise.all(noNames.map(async (entry) => {
+      Logger.log(`Processing ${JSON.stringify(entry)}`);
+      const {_id, itemid, name} = entry;
+      
+      console.log(_id);
+      const dt = await Nova.getMarketData(itemid);
+      await this.update(_id, {$set: {
+        name: dt.name,
+      }});
+    }));
   }
 
   async processAutomarkets() {
+
+    if (!await Scraper.login()) {
+      return;
+    }
 
     const list = await this.list({
       command: "market",
@@ -36,19 +91,26 @@ export default class Scheduler {
     const cmd = this.bot.commands.get("market");
 
     await Promise.all(list.map(async (entry) => {
-      Logger.log(`Processing ${JSON.stringify(entry)}`);
-      const { channelid, owner, args } = entry;
+      
+      const { channelid, owner, args, result, _id, itemid, } = entry;
+      Logger.log(`Processing id=${_id} owner=${owner} itemid=${itemid} args=${args}`);
       const message = {
         channel: this.bot.client.channels.get(channelid),
         author: this.bot.client.users.get(owner),
       };
       const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
-      await cmd.run(message, originalArgs, true);
-    }));
-    const usedAfter = process.memoryUsage();
-    const ht = "heapTotal";
-    Logger.debug(`${ht}: ${Math.round(usedAfter[ht] / 1024 / 1024 * 100) / 100} MB`);
+      const reply = await cmd.run(message, originalArgs, true);
 
+      if (result != reply) {
+        Logger.log(`There were changes for ${_id}: ${owner} - ${args}`);
+        await message.channel.send(`${message.author.toString()}${reply}`);
+        await this.update(_id, {$set: {
+          result: reply,
+        }});
+        return;
+      }
+      Logger.log(`No changes for ${_id}: ${owner} - ${args}`);
+    }));
   }
 
   async clear({
@@ -71,6 +133,12 @@ export default class Scheduler {
     return await this.collection.deleteOne({
       _id: id,
     });
+  }
+
+  async update(id, values) {
+    return await this.collection.updateOne({
+      _id: id,
+    }, values);
   }
 
   async get(id) {

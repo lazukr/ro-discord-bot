@@ -10,11 +10,16 @@ export const TABLE_TYPE = Object.freeze({
   DESCRIPTION: 3,
   VEND: 4,
 });
-
+const LOGIN_BUTTON = 'input[type=submit]';
 // this function handles getting pages from websites.
 
 export default class Scraper {
-  static async login() {
+  static notLoggedInReply = `Bot is not logged in and could not add the automarket. This will be added automatically when the bot is logged in.`;
+  static notified = false;
+  static session = '';
+  static bot = null;
+  static async login(session = null) {
+
     const options = {
       method: 'POST',
       uri: 'https://www.novaragnarok.com',
@@ -26,15 +31,46 @@ export default class Scraper {
         server: 'NovaRO',
         ...config.novaCredentials,
       },
-      followAllRedirects: true,  
+      followAllRedirects: true,
+      headers: {
+        Cookie: `fluxSessionData=${session ? session : Scraper.session}`,
+      },
+      transform: (body, response) => {
+        return cheerio.load(body);
+      },
     }
     
     return rp(options)
-      .then(res => {
-        Logger.log('Nova login successful!');
+      .then($ => {
+        try {
+          const loginBtn = Scraper.getElement({
+            page: $,
+            selector: LOGIN_BUTTON,
+            index: 1,
+          }).attribs.value; 
+          if (loginBtn) {
+            Logger.log('Nova login unsuccessful');
+            if (!Scraper.notified) {
+              const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
+              adminChannel.send(`<@${this.bot.admin.id}> Bot could not login. Please set session!`);
+              Scraper.notified = true;
+            }
+            return 0;
+          }
+        } catch {
+          //Logger.log('Nova login successful!');
+          Scraper.notified = false;
+          return 1;
+        }
       })
       .catch(err => {
         Logger.err(`Nova login failed! ${err}`);
+        if (!Scraper.notified) {
+          const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
+          adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check!`);
+          Scraper.notified = true;
+        }
+        return 0;
       });
   }
 
@@ -43,9 +79,13 @@ export default class Scraper {
       method: 'GET',
       uri: uri,
       qs: qs,
-      transform: (body) => {
+      transform: (body, response) => {
+        //console.log(response.headers);
         return cheerio.load(body);
       },
+      headers: {
+        Cookie: `fluxSessionData=${Scraper.session}`,
+      }
     };
 
     try {
