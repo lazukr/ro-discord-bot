@@ -171,10 +171,7 @@ async function setSession(message, session = null) {
   }
 
   logger.info("Setting Automarket Session...");
-  tf.AutoMarketTask.session = session;
-  logger.info(tf.AutoMarketTask.session);
-  const loginResult = await sc.login();
-  console.log(loginResult);
+  const loginResult = await sc.login(session);
 
   if (!loginResult) {
     message.channel.send(`The session didn't work! Try again.`);
