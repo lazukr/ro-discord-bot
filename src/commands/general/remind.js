@@ -61,18 +61,18 @@ function invalidInput(message, errnum) {
 }
 
 async function clear(message, bot) {
-  await bot.scheduler.clear(tf.TYPE.MSG);
+  await bot.scheduler.clear(tf.TYPE.MSG, message.author.id);
   message.channel.send(`All reminders have been cleared.`);
 }
 
 async function list(message, bot, page) {
-  const list = await bot.scheduler.getMessageList(page);
+  const list = await bot.scheduler.getMessageList(page, message.author.id);
   console.log(list);
   message.channel.send(list);
 }
 
 async function remove(message, bot, entry) {
-  const removed = await bot.scheduler.remove(tf.TYPE.MSG, entry);
+  const removed = await bot.scheduler.remove(tf.TYPE.MSG, entry, message.author.id);
   console.log(removed);
   message.channel.send(`${removed}`);
 }
@@ -113,11 +113,11 @@ exports.info = {
   "\t\t@remind <message> in <x time>\n\n" +
   "\t(Unavailable) To set a reminder at time x:\n" +
   "\t\t@remind <message at <time x>\n\n" +
-  "\tTo list out all reminders:\n" +
+  "\tTo list out all your reminders:\n" +
   "\t\t@remind --list\n\n" +
-  "\tTo remove the xth entry off the list:\n" +
-  "\t\t@remind --remove #x\n\n" +
-  "\tTo clear all entries\n" +
+  "\tTo remove the nth entry off your list:\n" +
+  "\t\t@remind --remove #n\n\n" +
+  "\tTo clear all your entries\n" +
   "\t\t@remind --clear\n\n" +
   "\tThe list of times:\n" +
   "\t\tseconds: s, sec, secs\n" +

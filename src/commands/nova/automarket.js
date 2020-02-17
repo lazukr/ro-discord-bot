@@ -43,23 +43,9 @@ exports.run = async (discordBot, message, args) => {
       await remove(message, discordBot, entry);
       return;
 
-    // invokes --interval
-    case `--${tf.CMD.INTERVAL}`:
-      const interval = parseInt(args[1]);
-      if (!interval) {
-        await getInterval(message, discordBot);
-        return;        
-      }
-      if (interval < 1 || interval > 60) {
-        invalidInput(message, ERRNUM.NVFI);
-        return;
-      }
-      await setInterval(message, discordBot, interval);
-      return;
-
     // invokes --all
     case `--${tf.CMD.ALL}`:
-      await getAll(message, discordBot, 1);
+      await getAll(message, discordBot);
       return;
     // invokes automarket adding 
 
@@ -91,7 +77,7 @@ function invalidInput(message, errnum) {
   }
 }
 
-async function getAll(message, bot, page) {
+async function getAll(message, bot) {
   logger.info(`Getting All for ${message.author.id}`);
   const list = await bot.scheduler._getAutoMarketList(message.author.id);
   
@@ -129,13 +115,13 @@ async function getAll(message, bot, page) {
 
 async function clear(message, bot) {
   logger.info("Clearing...");
-  await bot.scheduler.clear(tf.AUTOMARKET);
+  await bot.scheduler.clear(tf.AUTOMARKET, message.author.id);
   message.channel.send(`All automarkets are cleared.`);
 }
 
 async function list(message, bot, page) {
   logger.info("Listing...");
-  const list = await bot.scheduler.getAutoMarketList(page);
+  const list = await bot.scheduler.getAutoMarketList(page, message.author.id);
   message
     .channel
     .send(list)
@@ -146,21 +132,10 @@ async function list(message, bot, page) {
 
 async function remove(message, bot, entry) {
   logger.info("Removing...");
-  const removed = await bot.scheduler.remove(tf.TYPE.AUTOMARKET, entry);
+
+  const removed = await bot.scheduler.remove(tf.TYPE.AUTOMARKET, entry, message.author.id, entry < 501 ? false : true);
   logger.info(removed);
   message.channel.send(`${removed}`);
-}
-
-async function getInterval(message, bot) {
-  logger.info("Getting interval...");
-  const interval = await bot.scheduler.getCronInterval();
-  message.channel.send(`Current interval is set to ${interval} minute${interval == 1 ? "" : "s"}.`);
-}
-
-async function setInterval(message, bot, interval) {
-  logger.info("Updating interval...");
-  await bot.scheduler.setCronInterval(interval);
-  message.channel.send(`Set automarket check interval to every ${interval} minute${interval == 1 ? "" : "s"}.`);
 }
 
 async function setSession(message, session = null) {
@@ -244,6 +219,7 @@ async function addAutomarket(message, bot, args) {
     itemID: itemID,
     filters: filters,
     name: item,
+    result: '',
   }
   
   const automarketItem = await bot.scheduler.add(props);
@@ -282,11 +258,10 @@ exports.info = {
 
   clear: use this to clear all automarket entries.
 
-  list <page number>: use this to list all active automarket entries. Use <page number> to see different pages.
+  list <page number>: use this to list all your active automarket entries. Use <page number> to see different pages.
   
-  interval <value>: set how frequent it checks the market. <value> is in minutes.
-  
-  remove <index>: remove an entry based on the index given by the list.
+  remove <index | id>: remove an entry based on the index given by the list if index is less than 501. Over 501, it will assume it is an item's id. 
+  If there are multiple queries on the same item id, it will list them out and ask you to use indices to remove it.
   
   all: queries every automarket owned by you all at once. It may take some time to reply.\n`,
   usage: `@automarket <item_ID> <any market parameters>
