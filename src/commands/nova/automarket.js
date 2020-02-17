@@ -55,8 +55,8 @@ exports.run = async (discordBot, message, args) => {
       return;
 
     case `--listall`:
-      const page = parseInt(args[1]) || 1;
-      await listall(message, discordBot, page);
+      const listallpage = parseInt(args[1]) || 1;
+      await listall(message, discordBot, listallpage);
       return;
 
     default:
