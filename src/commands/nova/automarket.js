@@ -54,6 +54,10 @@ exports.run = async (discordBot, message, args) => {
       await setSession(message, args[1]);
       return;
 
+    case `--listall`:
+      await listall(message, discordBot);
+      return;
+
     default:
       await addAutomarket(message, discordBot, args);
       return;
@@ -117,6 +121,17 @@ async function clear(message, bot) {
   logger.info("Clearing...");
   await bot.scheduler.clear(tf.AUTOMARKET, message.author.id);
   message.channel.send(`All automarkets are cleared.`);
+}
+
+async function listall(message, bot) {
+  logger.info("Listing All...");
+  const list = await bot.scheduler.getAutoMarketList(1);
+  message
+    .channel
+    .send(list)
+    .catch(err => {
+      message.channel.send(err.message);
+    });
 }
 
 async function list(message, bot, page) {
