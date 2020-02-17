@@ -55,7 +55,8 @@ exports.run = async (discordBot, message, args) => {
       return;
 
     case `--listall`:
-      await listall(message, discordBot);
+      const page = parseInt(args[1]) || 1;
+      await listall(message, discordBot, page);
       return;
 
     default:
@@ -123,9 +124,9 @@ async function clear(message, bot) {
   message.channel.send(`All automarkets are cleared.`);
 }
 
-async function listall(message, bot) {
+async function listall(message, bot, page) {
   logger.info("Listing All...");
-  const list = await bot.scheduler.getAutoMarketList(1);
+  const list = await bot.scheduler.getAutoMarketList(page);
   message
     .channel
     .send(list)
