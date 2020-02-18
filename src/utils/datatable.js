@@ -27,7 +27,7 @@ export default class DataTable {
     if (this.header[col]) {
       return true;
     }
-    Logger.warn(`This table does not have the column: ${col}`);
+    //Logger.warn(`This table does not have the column: ${col}`);
     return false;
   } 
 

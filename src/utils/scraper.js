@@ -2,6 +2,9 @@ const rp = require('request-promise').defaults({jar: true});
 import cheerio from 'cheerio';
 import Logger from './logger';
 import config from '../../config.json';
+import sessionConfig from '../../session.json';
+import fs from 'fs';
+import Scheduler from './scheduler';
 
 export const TABLE_TYPE = Object.freeze({
   DEFAULT: 0,
@@ -16,7 +19,7 @@ const LOGIN_BUTTON = 'input[type=submit]';
 export default class Scraper {
   static notLoggedInReply = `Bot is not logged in and could not add the automarket. This will be added automatically when the bot is logged in.`;
   static notified = false;
-  static session = '';
+  static session = sessionConfig.session ? sessionConfig.session : '';
   static bot = null;
   static async login(session = null) {
 
@@ -60,11 +63,18 @@ export default class Scraper {
         } catch {
           //Logger.log('Nova login successful!');
           Scraper.notified = false;
+          if (!session) {
+            return 1;
+          }
+          sessionConfig.session = session;
+          Scraper.session = session;
+          fs.writeFileSync('session.json', JSON.stringify(sessionConfig));
+          this.bot.scheduler.processQueues();
           return 1;
         }
       })
       .catch(err => {
-        Logger.err(`Nova login failed! ${err}`);
+        Logger.error(`Nova login failed! ${err}`);
         if (!Scraper.notified) {
           const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
           adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check!`);

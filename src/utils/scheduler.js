@@ -78,19 +78,9 @@ export default class Scheduler {
     }));
   }
 
-  async processAutomarkets() {
-
-    if (!await Scraper.login()) {
-      return;
-    }
-
-    const list = await this.list({
-      command: "market",
-    });
-
+  async _processAutomarkets(list) {
     const cmd = this.bot.commands.get("market");
-
-    await Promise.all(list.map(async (entry) => {
+    return await Promise.all(list.map(async (entry) => {
       
       const { channelid, owner, args, result, _id, itemid, } = entry;
       Logger.log(`Processing id=${_id} owner=${owner} itemid=${itemid} args=${args}`);
@@ -99,15 +89,50 @@ export default class Scheduler {
         author: this.bot.client.users.get(owner),
       };
       const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
-      const reply = await cmd.run(message, originalArgs, true);
+      return await cmd.run(message, originalArgs, true);
+    }));
+  }
 
-      if (result != reply) {
+
+
+  async processAutomarkets(inputOwner = null) {
+
+    if (!await Scraper.login()) {
+      return;
+    }
+
+    const list = await this.list({
+      command: "market",
+      owner: inputOwner,
+    });
+
+    const cmd = this.bot.commands.get("market");
+    return await Promise.all(list.map(async (entry) => {
+      console.log(entry);
+      const { channelid, owner, args, result, _id, itemid, } = entry;
+      Logger.log(`Processing id=${_id} owner=${owner} itemid=${itemid} args=${args}`);
+      const message = {
+        channel: this.bot.client.channels.get(channelid),
+        author: this.bot.client.users.get(owner),
+      };
+      const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
+      const marketResult = await cmd.run(message, originalArgs, true);
+
+      if (result != marketResult.reply) {
         Logger.log(`There were changes for ${_id}: ${owner} - ${args}`);
-        await message.channel.send(`${message.author.toString()}${reply}`);
         await this.update(_id, {$set: {
-          result: reply,
+          result: marketResult.reply,
         }});
-        return;
+        if (!inputOwner) {
+          await message.channel.send(`${message.author.toString()}${marketResult.reply}`);
+        }
+        if (inputOwner) {
+          return marketResult;
+        }
+      }
+
+      if (inputOwner) {
+        return marketResult;
       }
       Logger.log(`No changes for ${_id}: ${owner} - ${args}`);
     }));

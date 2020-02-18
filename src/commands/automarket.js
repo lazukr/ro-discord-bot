@@ -13,11 +13,11 @@ export default class NovaAutoMarket extends Command {
       description: "Gets market information of a particular item directly from Nova RO's website on a regular basis. When results exist, the bot will notify the user.\n\* Use subcommand **list** to list out all your automarket.\n\* Use subcommand **remove** to remove an entry from your automarket based on the id from the list. You can provide a list of comma separated ids.\n\* Use subcommand **clear** to remove ALL entries from your automarket.",
       usage: `${bot.prefix}automarket <item id> [, <refine>] [, <price>] [, <additional properties>, ...].\n\n` +
       `${bot.prefix}automarket ${bot.subprefix}list \n\n` +
-      `${bot.prefix}automarket ${bot.subprefix}remove <entry id> [, <entry id>, ...]\n\n` +
+      `${bot.prefix}automarket ${bot.subprefix}remove <entry id | item id> [, <entry id | item id>, ...].\n\n  If duplicates are found, they will be listed and will require entry id in order to delete.\n\n` +
       `${bot.prefix}automarket ${bot.subprefix}clear`,
       aliases: ["am"],
       category: "Nova",
-      subCommands: ["list", "clear", "remove", "session"],
+      subCommands: ["list", "clear", "remove", "session", "all"],
     });
   }
 
@@ -53,6 +53,15 @@ export default class NovaAutoMarket extends Command {
       return subCommand;
     }
 
+    const list = await this.bot.scheduler.list({
+      command: "market",
+      owner: message.author.id,
+    });
+
+    if (list.length === 500) {
+      await message.channel.send(`You cannot have more than 500 queries. Please delete an existing one.`);
+      return;
+    }
 
     // convert args to comma deliminated list
     args = args
@@ -119,7 +128,7 @@ export default class NovaAutoMarket extends Command {
   }
 
   // lists
-  async list(message, args) {
+  async list(message, args, filterids = []) {
     Logger.log(`Listing automarket for ${message.author.username}(${message.author.id})`);
     const list = await this.bot.scheduler.list({
       command: "market",
@@ -128,7 +137,7 @@ export default class NovaAutoMarket extends Command {
 
     list.forEach(item => {
       item.result = undefined;
-      Logger.log(JSON.stringify(item));
+      //Logger.log(JSON.stringify(item));
     });
 
     const header = {
@@ -139,6 +148,12 @@ export default class NovaAutoMarket extends Command {
     };
 
     const displayList = list.map((row, index) => {
+      //console.log(row);
+
+      if (filterids.length > 0 && !filterids.includes(row._id.toString())) {
+        return undefined;
+      }
+
       const args = JSON.parse(row.args).slice(1); // remove first item as that is the item id
       const rowargs = getFilters(args);
 
@@ -155,47 +170,72 @@ export default class NovaAutoMarket extends Command {
      
     const dt = new DataTable({
       header: header,
-      contents: displayList,
+      contents: displayList.filter(entry => entry),
     }); 
 
     const { reply } = PrettyPrinter.tabulate({
-      table: dt,
+      table: dt, 
+      name: null,
+      supressEntryText: true,
     });
 
     Logger.log(reply);
-    await message.channel.send(`Automarket for ${message.author.toString()}\n${reply}`);
+
+    if (filterids.length === 0) {
+      await message.channel.send(`Automarket for ${message.author.toString()}\n${reply}`);
+    }
     return reply;
   }
 
   async remove(message, args) {
    
     if (!args.length) {
-      const reply = "Please specify an automarket id to remove it.";
+      const reply = "Please specify an automarket id or item id to remove it.";
       await message.channel.send(reply);
       return reply;
     }
     const ids = args.map(arg => parseInt(arg));
-    Logger.log(`Removing automarket entries: ${ids.toString()}`);
+    Logger.log(`Removing automarket entries: ${JSON.stringify(ids)}`);
     
     const list = await this.bot.scheduler.list({
       command: "market",
       owner: message.author.id,
     });
     
-    const removeids = ids
+    //console.log(list);
+
+    // get all ids based on the automarket list
+    const removeEntryIds = ids
       .filter(id => id <= list.length)
       .map(id => list[id - 1]._id);
  
-    if (!removeids.length) {
+    // get all ids based on the item id. The main assumption being item ids start at 501 and no one is going to have 500 queries.
+    // it will also check against the automarket id list and remove any duplicates.
+    const removeItemIds = ids
+      .filter(id => id > 500)
+      .map(id => list
+        .filter(entry => parseInt(entry.itemid) === id)
+        .map(entry => entry._id)
+      );
+    
+    const duplicates = [].concat(...removeItemIds
+      .filter(entry => entry.length > 1))
+      .map(id => id.toString());
+
+    const removeIds = removeEntryIds
+      .concat(...removeItemIds
+        .filter(entry => entry.length === 1)
+      );
+
+    if (!removeIds.length && !duplicates.length) {
       const reply = "None of the ids are in your automarket. Nothing was removed";
       await message.channel.send(reply);
       return reply;
     }
 
-    const removedReply = await Promise.all(removeids.map(async (id) => {
+    const removedReply = await Promise.all(removeIds.map(async (id) => {
       Logger.log(`Attempting to delete automarket with id: ${id}.`);
-      const deleteEntryInfo = await this.bot.scheduler.get(id);
-      
+      const deleteEntryInfo = await this.bot.scheduler.get(id);  
       const args = JSON.parse(deleteEntryInfo.args).slice(1); // remove first item as that is the item id
       const rowargs = getFilters(args);
 
@@ -227,8 +267,57 @@ export default class NovaAutoMarket extends Command {
     });
     
     Logger.log(reply);
-    await message.channel.send(`The following automarket were removed from ${message.author.username}'s automarket.\n${reply}`);
+
+    if (removeIds.length) {
+      await message.channel.send(`The following automarket were removed from ${message.author.username}'s automarket.${reply}`);
+    }
+    
+    if (duplicates.length) {
+      const duplicateList = await this.list(message, args, duplicates);
+      await message.channel.send(`The following automarkets for ${message.author.username} could not be deleted due to ambiguity. Please use the automarket list id to delete these.${duplicateList}`);
+    }
     return reply; 
+  }
+
+  async all(message, args) {
+    Logger.log(`Getting all for ${message.author.username}...`);
+
+    const list = await this.bot.scheduler.processAutomarkets(message.author.id);
+
+    if (!list) {
+      await message.channel.send(`You have no automarkets`);
+      return;
+    }
+
+    console.log(list);
+    const resultList = list.filter(entry => entry.result);
+
+    if (!resultList) {
+      await message.channel.send(`No automarkets with relevant results.`);
+      return;
+    }
+
+    let curMsg = `${message.author.toString()}`;
+    const printList = [];
+    
+    for (let i = 0; i < resultList.length; i++) {
+  
+      if ((curMsg + resultList[i].reply).length > 2000) {
+        printList.push(curMsg);
+        curMsg = resultList[i].reply;
+      } else {
+        curMsg += resultList[i].reply;
+      }
+  
+      if (i === resultList.length - 1) {
+        printList.push(curMsg);
+      }
+    }
+    //console.log(printList);
+    printList.forEach(async (sendMsg) => {
+      await message.channel.send(`${sendMsg}`);
+    });
+
   }
 
   async session(message, args) {
@@ -237,12 +326,8 @@ export default class NovaAutoMarket extends Command {
         return;
       }
 
-      console.log(args);
-
       const session = args[0];
       console.log(session);
-
-      Scraper.session = session;
 
       const loginResult = await Scraper.login(session);
       if (!loginResult) {
@@ -252,9 +337,7 @@ export default class NovaAutoMarket extends Command {
 
       //Scraper.session = session;
       message.channel.send(`Session has been set!`);
-
-      await this.bot.scheduler.processQueues();
-
+      //await this.bot.scheduler.processQueues();
   }
 
 }

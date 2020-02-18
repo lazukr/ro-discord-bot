@@ -32,7 +32,7 @@ export default class NovaMarket extends Command {
       return "No args";
     }
 
-    console.log(args);
+    Logger.log(args);
 
     if (! await Scraper.login() && !silent) {
       const result = await this.bot.scheduler.insert({
@@ -92,7 +92,10 @@ export default class NovaMarket extends Command {
     }
     
     Logger.log(reply);
-    return reply;
+    return {
+      reply: reply,
+      result: result,
+    };
   }
 }
 
