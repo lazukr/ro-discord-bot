@@ -8,13 +8,13 @@ export default class PrettyPrinter {
   static tabulate({
     table,
     name,
-    supressEntryText,
+    suppressEntryText,
     page,
   }) {
     const printTable = new Tabulator({
       name: name,
       table: table,
-      supressEntryText: supressEntryText,
+      suppressEntryText: suppressEntryText,
     });
 
     if (!printTable.hasResults) {
@@ -84,13 +84,13 @@ class Tabulator {
   constructor({
     name,
     table,
-    supressEntryText = false,
+    suppressEntryText,
   }) {
     table.finalize();
     const { header, contents } = table;
     this.originalLength = table.originalLength;
     this.name = name;
-    this.suppressEntryText = supressEntryText;
+    this.suppressEntryText = suppressEntryText;
     this.keys = Object.keys(header);
     this.columnWidths = this._getColumnWidths(header, contents); 
     this.header = this._prettify([header, this._getSeparators()]);
@@ -170,7 +170,7 @@ class Tabulator {
       `${this.header.join('\n')}\n` +
       `${this.pages[page].join('\n')}\n`;
 
-    if (!this.supressEntryText) {
+    if (!this.suppressEntryText) {
       const startEntry = Math.min(this.contents.length, this.entriesPerPage * page + 1);
       const endEntry = Math.min(this.contents.length, this.entriesPerPage * (page + 1));
       reply += '\n' +

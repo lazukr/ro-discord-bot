@@ -1,8 +1,11 @@
 import MongoClient from 'mongodb';
 import Logger from './logger';
-import cron from 'node-cron';
+import schedule from 'node-schedule';
 import Scraper from './scraper';
 import Nova from "../utils/nvro";
+import { TIMEZONE, REMIND } from "../commands/remind";
+import { MARKET } from "../commands/automarket";
+import { MARKETQUEUE } from "../commands/market";
 
 export default class Scheduler {
   constructor(bot, url) {
@@ -16,14 +19,26 @@ export default class Scheduler {
     this.collection = db.collection('jobs');
 
     // begin the scheduler
-    cron.schedule(`0 */1 * * * *`, async () => {
+    schedule.scheduleJob(`*/1 * * * *`, async () => {
       await this.processAutomarkets();
+      await this.processReminders();
+    });
+
+    Logger.log("Reminders");
+    const reminderEntries = await this.list({
+      command: REMIND,
     });
 
     Logger.log("Automarkets");
     const automarketEntries = await this.list({
-      command: "market",
+      command: MARKET,
     });
+
+    reminderEntries.forEach(rm => {
+      const { channelid, owner, args, _id, } = rm;
+      Logger.log(`id=${_id} owner=${owner} channelid=${channelid} msg=${args}`);
+    });
+
     automarketEntries.forEach(am => {
       const { channelid, owner, args, _id, itemid, } = am;
       Logger.log(`id=${_id} owner=${owner} channelid=${channelid} itemid=${itemid} args=${args}`);
@@ -40,7 +55,7 @@ export default class Scheduler {
 
   async processQueues() {
     const marketQueueList = await this.list({
-      command: "marketqueue",
+      command: MARKETQUEUE,
     });
 
     const marketCmd = this.bot.commands.get("market");
@@ -56,11 +71,11 @@ export default class Scheduler {
     }));
 
     await this.clear({
-      command: "marketqueue",
+      command: MARKETQUEUE,
     });
 
     const marketList = await this.list({
-      command: "market",
+      command: MARKET,
     });
 
     const noNames = marketList.filter((entry) => !entry.name);
@@ -79,7 +94,7 @@ export default class Scheduler {
   }
 
   async _processAutomarkets(list) {
-    const cmd = this.bot.commands.get("market");
+    const cmd = this.bot.commands.get(MARKET);
     return await Promise.all(list.map(async (entry) => {
       
       const { channelid, owner, args, result, _id, itemid, } = entry;
@@ -93,7 +108,16 @@ export default class Scheduler {
     }));
   }
 
+  async processReminders() {
+    const list = await this.list({
+      command: REMIND,
+    });
 
+    
+
+
+
+  }
 
   async processAutomarkets(inputOwner = null) {
 
@@ -102,11 +126,11 @@ export default class Scheduler {
     }
 
     const list = await this.list({
-      command: "market",
+      command: MARKET,
       owner: inputOwner,
     });
 
-    const cmd = this.bot.commands.get("market");
+    const cmd = this.bot.commands.get(MARKET);
     return await Promise.all(list.map(async (entry) => {
       console.log(entry);
       const { channelid, owner, args, result, _id, itemid, } = entry;
@@ -120,9 +144,9 @@ export default class Scheduler {
 
       if (result != marketResult.reply) {
         Logger.log(`There were changes for ${_id}: ${owner} - ${args}`);
-        await this.update(_id, {$set: {
+        await this.update(_id, {
           result: marketResult.reply,
-        }});
+        });
         if (!inputOwner) {
           await message.channel.send(`${message.author.toString()}${marketResult.reply}`);
         }
@@ -160,10 +184,10 @@ export default class Scheduler {
     });
   }
 
-  async update(id, values) {
+  async update(id, values, upsert = false) {
     return await this.collection.updateOne({
       _id: id,
-    }, values);
+    }, {$set: values}, {upsert: upsert});
   }
 
   async get(id) {
@@ -198,11 +222,14 @@ export default class Scheduler {
     channelid,
     command,
     owner,
-    args,
-    name,
-    itemid,
-    sleepUntil = null,
-    interval = null,
+    args, 
+    name = null,
+    itemid = null,
+    result = null,
+    msg = null,
+    type = null,
+    sleepUntil = null, // denotes when next time should occur for reminder
+    interval = null, // denotes cron for reminder
     autoRemove = false,
   }) {
 
@@ -210,10 +237,32 @@ export default class Scheduler {
       channelid: channelid,
       command: command,
       owner: owner,
-      itemid: itemid,
       args: args,
-      name: name,
     };
+
+    if (command === TIMEZONE) {
+      params._id = owner;
+    }
+
+    if (msg) {
+      params.msg = msg;
+    }
+
+    if (type) {
+      params.type = type;
+    }
+
+    if (name) {
+      params.name = name;
+    }
+
+    if (itemid) {
+      params.itemid = itemid;
+    }
+
+    if (result) {
+      params.result = result;
+    }
 
     if (sleepUntil) {
       params.sleepUntil = sleepUntil;

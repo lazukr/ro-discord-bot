@@ -5,6 +5,8 @@ import PrettyPrinter from "../utils/prettyPrinter";
 import { getSearch, getMarket } from "../utils/nvrocmd";
 import Scraper from "../utils/scraper";
 
+export const MARKETQUEUE = "marketqueue";
+
 const FINDER = Object.freeze({
   REFINE: /^<?\+\d{1,2}$/,
   PAGE: /^p\d{1,2}$/,
@@ -37,7 +39,7 @@ export default class NovaMarket extends Command {
     if (! await Scraper.login() && !silent) {
       const result = await this.bot.scheduler.insert({
         channelid: message.channel.id,
-        command: "marketqueue",
+        command: MARKETQUEUE,
         owner: message.author.id,
         args: `${JSON.stringify(args)}`,
       });

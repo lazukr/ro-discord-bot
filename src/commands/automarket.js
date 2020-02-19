@@ -6,6 +6,8 @@ import DataTable from "../utils/datatable";
 import { getFilters } from "./market";
 import Scraper from "../utils/scraper";
 
+export const MARKET = "market";
+
 export default class NovaAutoMarket extends Command {
   constructor(bot) {
     super(bot, {
@@ -54,7 +56,7 @@ export default class NovaAutoMarket extends Command {
     }
 
     const list = await this.bot.scheduler.list({
-      command: "market",
+      command: MARKET,
       owner: message.author.id,
     });
 
@@ -91,7 +93,7 @@ export default class NovaAutoMarket extends Command {
     // if it was ran normally
     const result = await this.bot.scheduler.insert({
       channelid: message.channel.id,
-      command: "market",
+      command: MARKET,
       owner: message.author.id,
       itemid: datatable.table.id,
       name: datatable.name,
@@ -107,13 +109,14 @@ export default class NovaAutoMarket extends Command {
       await message.channel.send(reply);
       return reply;
     }
+    await message.channel.send(`Failed to add automarket. Please contact developer.`);
   }
 
   // clearing messages
   async clear(message, args) {
     Logger.log(`Clearing automarket...`);
     const result = await this.bot.scheduler.clear({
-      command: "market",
+      command: MARKET,
       owner: message.author.id,
     });
     
@@ -131,9 +134,14 @@ export default class NovaAutoMarket extends Command {
   async list(message, args, filterids = []) {
     Logger.log(`Listing automarket for ${message.author.username}(${message.author.id})`);
     const list = await this.bot.scheduler.list({
-      command: "market",
+      command: MARKET,
       owner: message.author.id,
     });
+
+    if (!list.length && !filterids.length) {
+      await message.channel.send(`You have no automarkets.`);
+      return;
+    }
 
     list.forEach(item => {
       item.result = undefined;
@@ -176,7 +184,7 @@ export default class NovaAutoMarket extends Command {
     const { reply } = PrettyPrinter.tabulate({
       table: dt, 
       name: null,
-      supressEntryText: true,
+      suppressEntryText: filterids.length ? true : false,
     });
 
     Logger.log(reply);
@@ -198,7 +206,7 @@ export default class NovaAutoMarket extends Command {
     Logger.log(`Removing automarket entries: ${JSON.stringify(ids)}`);
     
     const list = await this.bot.scheduler.list({
-      command: "market",
+      command: MARKET,
       owner: message.author.id,
     });
     
@@ -264,6 +272,8 @@ export default class NovaAutoMarket extends Command {
 
     const { reply } = PrettyPrinter.tabulate({
       table: dt,
+      name: null,
+      suppressEntryText: true,
     });
     
     Logger.log(reply);
