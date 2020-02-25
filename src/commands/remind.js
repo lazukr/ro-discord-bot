@@ -283,7 +283,7 @@ export default class Remind extends Command {
       table: dt,
     });
 
-    Logger.log(reply);
+    //Logger.log(reply);
     await message.channel.send(`Reminders for ${message.author.toString()}\n${reply}`);
     return reply;
   }
@@ -328,7 +328,7 @@ export default class Remind extends Command {
       await this.bot.scheduler.cancelReminder(id);
       const deleteEntryInfo = await this.bot.scheduler.get(id);  
       const result = await this.bot.scheduler.remove(id);
-      Logger.debug(result);
+      //Logger.debug(result);
       deleteEntryInfo.sleepUntil = moment(deleteEntryInfo.sleepUntil).isSame(moment(CRON_DATE)) 
       ? cronstrue.toString(deleteEntryInfo.modifier).toLowerCase() 
       : Moment.tz(deleteEntryInfo.sleepUntil, timezone ? timezone.args : null).calendar(); 
@@ -347,7 +347,7 @@ export default class Remind extends Command {
       suppressEntryText: true,
     });
     
-    Logger.log(reply);
+    //Logger.log(reply);
 
     if (removeIds.length) {
       await message.channel.send(`The following reminders were removed from ${message.author.username}'s reminder list.${reply}`);
