@@ -34,8 +34,6 @@ export default class NovaMarket extends Command {
       return "No args";
     }
 
-    Logger.log(args);
-
     if (! await Scraper.login() && !silent) {
       const result = await this.bot.scheduler.insert({
         channelid: message.channel.id,
@@ -93,7 +91,7 @@ export default class NovaMarket extends Command {
       await message.channel.send(`${message.author.toString()}${reply}`);
     }
     
-    Logger.log(reply);
+    //Logger.log(reply);
     return {
       reply: reply,
       result: result,

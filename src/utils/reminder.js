@@ -34,6 +34,8 @@ const inRegex = /in(?!.+\sin)\s.+/;
 const atRegex = /at(?!.+\sat)\s.+/;
 const everyRegex = /every(?!.+\severy)\s.+/;
 const cronRegex = /cron(?!.+\scron)\s.+/;
+const memberRegex = /^<@\!\d+>/;
+const notifyRegex = /^@(all|here)/;
 
 export default class Reminder extends EventEmitter {
     constructor(bot) {
@@ -177,7 +179,7 @@ export default class Reminder extends EventEmitter {
                 const match = ` ${args}`.match(curExp); // to make regex work in case that a digit is not provideds
                 // if digit is not provided, but still found a match, assume 1.
                 // otherwise if it's 0, stay 0.
-                const number = match ? parseInt(match[0]) === 0 ? 0 : 1 : 0; 
+                const number = match ? parseInt(match[0]) === 0 ? 0 : parseInt(match[0]) || 1 : 0; 
                 result[value] = number > 0 ? number : 0;  // if digits is less than 0, put 0.
                 return result;
             }, {});
@@ -239,6 +241,9 @@ export default class Reminder extends EventEmitter {
     // main reminder processing method.
     async process(params) {
         const { channelid, owner, message } = params;
+        const notify = message.match(notifyRegex);
+        const notifyMember = message.match(memberRegex);
+        
         const channel = await this.bot.client.channels.get(channelid);
         await channel.send(`<@${owner}>! ${this.bot.name} has a message for you.\n> ${message}`);
     }

@@ -105,7 +105,7 @@ export default class Scheduler {
     const cmd = this.bot.commands.get(MARKET);
     return await Promise.all(list.map(async (entry) => {
       
-      const { channelid, owner, args, result, _id, itemid, } = entry;
+      const { channelid, owner, args, _id, itemid, } = entry;
       Logger.log(`Processing id=${_id} owner=${owner} itemid=${itemid} args=${args}`);
       const message = {
         channel: this.bot.client.channels.get(channelid),
@@ -213,7 +213,6 @@ export default class Scheduler {
 
     const cmd = this.bot.commands.get(MARKET);
     return await Promise.all(list.map(async (entry) => {
-      Logger.log(entry);
       const { channelid, owner, args, result, _id, itemid, } = entry;
       Logger.log(`Processing id=${_id} owner=${owner} itemid=${itemid} args=${args}`);
       const message = {

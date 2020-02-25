@@ -26,15 +26,10 @@ export default class Remind extends Command {
     super(bot, {
       name: "remind",
       description: `Set a reminder so that the bot will ping you.\n* Use subcommand **list** to see all your reminders.\n* Use subcommand **remove** to remove one of your reminders based on the id from the list. You can provide a list of comma separated ids.\n* Use subcommand **clear** to remove **ALL** reminders from your list.\n* Use subcommand **timezone** to set it to your local timezone.\n In order for you to know your timezone, visit ${momenturl}`,
-      usage: `${bot.prefix}remind <message> in <duration>\n\n` +
-      `${bot.prefix}remind <message> at <time> (requires you to have timezone set up.)\n\n` +
-      `${bot.prefix}remind ${bot.subprefix}timezone <timezone>. **E.g. ${bot.prefix}remind ${bot.subprefix}timezone sydney.** \n\n` +
-      `${bot.prefix}remind ${bot.subprefix}list \n\n` +
-      `${bot.prefix}remind ${bot.subprefix}remove <entry id> [, <entry id>, ...].\n\n` +
-      `${bot.prefix}remind ${bot.subprefix}clear`,
+      usage: `Refer to \`${bot.prefix}remind\` for in-depth details`,
       aliases: ["rmb"],
       category: "General",
-      subCommands: ["list", "clear", "remove", "timezone", "in", "at", "every", "cron"],
+      subCommands: ["list", "clear", "remove", "timezone", "in", "at", "every", "cron", "units"],
     });
     this.botprefix = bot.prefix;
     this.botsubprefix = bot.subprefix;
@@ -51,8 +46,9 @@ export default class Remind extends Command {
           description: `**1.** Set your timezone by using the \`${this.botsubprefix}timezone\` subcommand before queuing a reminder. ` +
           (timezone ? `\n> Your current timezone is set to: **${timezone.args} (${Moment.tz(timezone.args).format("Z z")}).**` 
           : `\n> **You do not have timezone set, thus any reminders queued is assumed to be +00:00 GMT.** Visit ${momenturl} to find out your timezone.`) +
-          `\n**2.** Queue a reminder using one of the 3 methods \`in\`, \`at\`, \`every\`, \`cron\`.` +
-          `\nUse \`${this.botsubprefix}in\`, \`${this.botsubprefix}at\`, \`${this.botsubprefix}every\`, \`${this.botsubprefix}cron\` for more information on each use case.`,
+          `\n**2.** Queue a reminder using one of the 4 methods \`in\`, \`at\`, \`every\`, \`cron\`.` +
+          `\nUse \`${this.botsubprefix}in\`, \`${this.botsubprefix}at\`, \`${this.botsubprefix}every\`, \`${this.botsubprefix}cron\` for more information on each use case.` +
+          `\n**3.** Use \`${this.botsubprefix}units\` for a list of available time units.`,
         };
       await message.channel.send({embed: embed});
       return "No args";
@@ -150,7 +146,9 @@ export default class Remind extends Command {
           `\n> ${this.botprefix}remind <message> in <#> <time unit>` +
           `\nFor example:` +
           `\n> ${this.botprefix}remind hi in 5 min` +
-          `\nwill ping you the message "hi" in 5 min.`,
+          `\nwill ping you the message "hi" in 5 min.` +
+          `\nRun the following for a list of all the available time units:` +
+          `\n> ${this.botprefix}remind ${this.botsubprefix}units`,
     };
     await message.channel.send({embed: embed});
   }
@@ -179,7 +177,9 @@ export default class Remind extends Command {
       `\n> ${this.botprefix}remind <message> every <#> <time unit>` +
       `\nFor example:` +
       `\n> ${this.botprefix}remind hi every 5 min` +
-      `\nwill ping you the message "hi" every 5 minutes from now.`,
+      `\nwill ping you the message "hi" every 5 minutes from now.` +
+      `\nRun the following for a list of all the available time units:` +
+      `\n> ${this.botprefix}remind ${this.botsubprefix}units`,
     }
     await message.channel.send({embed: embed});
   }
@@ -210,6 +210,19 @@ export default class Remind extends Command {
       `\n> Differences with the **Every mode**` +
       `\n> - Every operates on regular intervals you set from now. Cron works solely based on a predefined pattern.` +
       `\n> - Every can do irregular intervals such as every 21 minutes. Cron can do it too, but irregular intervals will be cut off when that unit of time completes its cycle. E.g. */21 * * * * (every 21 minutes in the hour) = 8:21, 8:42, 9:21, 9:42...`,
+    }
+    await message.channel.send({embed: embed});
+  }
+
+  async units(message) {
+    const embed = {
+      title: `**How to use reminder - Time Units**`,
+      description: `Available time units:` +
+      `\n> Seconds: \`s, sec, secs, second, seconds\`` +
+      `\n> Minutes: \`m, min, mins, minute, minutes\`` +
+      `\n> Hours: \`h, hr, hrs, hour, hours\`` +
+      `\n> Days: \`d, day, days\`` +
+      `\n> Weeks: \`w, wk, wks, week, weeks\``,
     }
     await message.channel.send({embed: embed});
   }
@@ -351,13 +364,18 @@ export default class Remind extends Command {
         owner: message.author.id,
       });  
 
-      if (!result[0]) {
-        await message.channel.send(`Find your corresponding timezone here ${momenturl}. Copy the ***name*** of it and use it with this command with it. E.g. Australia/Sydney.`);
-        return;
-      }
-
-      const timezone = result[0] ? `${result[0].args} (${Moment.tz(result[0].args).format("Z z")})` : `Not set`;
-      await message.channel.send(`Your current timezone is set to: **${timezone}**.\n`);
+      const timezone = result[0] ? `${result[0].args} (${Moment.tz(result[0].args).format("Z z")})` : `Not set (+00:00 GMT)`;
+      const embed = {
+        title: `**How to use reminder - Timezone**`,
+        description: `Your current timezone is set to:` +
+        `\n> **${timezone}**` +
+        `\nTo find or update your timezone, please visit this website ${momenturl} and find the name of the city your timezone falls under. ` +
+        `Then run the command:` +
+        `\n> ${this.botprefix}remind ${this.botsubprefix}timezone Region/City` +
+        `\nFor example, if your timezone falls under Australia/Sydney` +
+        `\n> ${this.botprefix}remind ${this.botsubprefix}timezone Australia/Sydney`,
+      };
+      await message.channel.send({embed: embed});
       return;
     }
 
@@ -367,7 +385,7 @@ export default class Remind extends Command {
       await message.channel.send(`Your timezone is not in the list!`);
       return;
     }
-    Logger.debug(tz);
+    //Logger.debug(tz);
     Logger.log(`Adding remind-timezone for ${message.author.username} (${message.author.id}) with timezone: ${tz[0]}.`);
 
     const params = {
