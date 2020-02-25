@@ -50,8 +50,8 @@ export default class Scheduler {
     });
 
     automarketEntries.forEach(am => {
-      const { channelid, owner, args, _id, itemid, } = am;
-      Logger.log(`id=${_id} owner=${owner} channelid=${channelid} itemid=${itemid} args=${args}`);
+      const { channelid, owner, args, _id, itemid, sleepUntil, creationDateTime } = am;
+      Logger.log(`id=${_id} owner=${owner} channelid=${channelid} itemid=${itemid} args=${args} creationDateTime=${creationDateTime} sleepUntil=${sleepUntil}`);
     });
 
     Logger.log("Market Queues");
