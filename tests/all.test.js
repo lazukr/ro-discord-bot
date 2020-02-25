@@ -5,5 +5,6 @@ const esmImport = require('esm')(module);
 //const chooseTest = esmImport('./commands/choose.assert');
 //const novatest = esmImport('./utils/nvro.assert');
 //const novaMarketTest = esmImport('./commands/market.assert');
-const novaCmdTest = esmImport('./utils/nvrocmd.assert');
+//const novaCmdTest = esmImport('./utils/nvrocmd.assert');
 //const novaLoginTest = esmImport('./login.assert');
+const reminderTest = esmImport('./utils/reminder.assert');

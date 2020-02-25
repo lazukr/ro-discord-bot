@@ -1,27 +1,37 @@
 import MongoClient from 'mongodb';
 import Logger from './logger';
-import schedule from 'node-schedule';
+import schedule from 'node-schedule-tz';
 import Scraper from './scraper';
 import Nova from "../utils/nvro";
 import { TIMEZONE, REMIND } from "../commands/remind";
 import { MARKET } from "../commands/automarket";
 import { MARKETQUEUE } from "../commands/market";
+import Reminder, { CRON_DATE } from './reminder';
+import moment from 'moment';
 
 export default class Scheduler {
   constructor(bot, url) {
     this.url = url;
     this.bot = bot;
+    this.reminderer = new Reminder(bot);
   }
 
   async init() {
     const mongo = await MongoClient.connect(this.url, { useNewUrlParser: true });
     const db = mongo.db('test');
     this.collection = db.collection('jobs');
+    this.reminderList = {};
+
+    this.reminderer.on(REMIND, this.reminderer.process);
+
+    await this.queueReminders();
+    
+    // to delete all reminders
+    //await this.clear({command: REMIND });
 
     // begin the scheduler
     schedule.scheduleJob(`*/1 * * * *`, async () => {
       await this.processAutomarkets();
-      await this.processReminders();
     });
 
     Logger.log("Reminders");
@@ -84,8 +94,6 @@ export default class Scheduler {
     await Promise.all(noNames.map(async (entry) => {
       Logger.log(`Processing ${JSON.stringify(entry)}`);
       const {_id, itemid, name} = entry;
-      
-      console.log(_id);
       const dt = await Nova.getMarketData(itemid);
       await this.update(_id, {$set: {
         name: dt.name,
@@ -108,15 +116,88 @@ export default class Scheduler {
     }));
   }
 
-  async processReminders() {
+  async loadReminder(reminder) {
+    const id = reminder._id;
+    if (id in this.reminderList) {
+      Logger.log(`This is already queued in the list.`);
+      return;
+    }
+
+    const expireDate = new Date(reminder.sleepUntil);
+    const currentDate = new Date();
+
+    const queueDate = moment(expireDate).isSame(moment(CRON_DATE))
+      ? reminder.modifier 
+      : currentDate > expireDate 
+      ? currentDate.setSeconds(currentDate.getSeconds() + 1) 
+      : expireDate;
+
+    Logger.log(`Loading reminder: ${id}`);
+
+    const paramsArray = [id.toString(), queueDate];
+
+    if (moment(expireDate).isSame(CRON_DATE)) {
+      paramsArray.push(reminder.timeElement); // modifier for modifying timezone
+    }
+
+    this.reminderList[id] = schedule.scheduleJob(...paramsArray, async () => {
+      await this.reminderer.emit(REMIND, reminder);
+
+      if (reminder.sleepUntil === CRON_DATE) {
+        return;
+      }
+
+      if (reminder.repeat) {
+        const now = new Date();
+        let newSleepUntil = new Date(reminder.sleepUntil);
+        while (newSleepUntil < now) {
+          newSleepUntil = Reminder.applyDateTransform(newSleepUntil, reminder.modifier);
+        }
+
+        //const newSleepUntil = Reminder.applyDateTransform(now, reminder.modifier);
+        const updateStatus = await this.update(id, {sleepUntil: newSleepUntil});
+        const newReminder = await this.get(id);
+
+        // already killed by now
+        if (!newReminder) {
+          return;
+        }
+
+        await this.cancelReminder(id);
+        await this.loadReminder(newReminder);
+        return;
+      }
+
+      Logger.log(`Deleting ${id} ...`);
+      await this.cancelReminder(id);
+      const removeStatus = await this.remove(id);
+      if (removeStatus.deletedCount) {
+        Logger.log(`Deleted ${id}.`);
+      }
+      //Logger.debug(removeStatus);
+    });
+
+    Logger.log(`Queued reminder: ${id}`);
+  }
+
+  async cancelReminder(key) {
+    Logger.log(`Cancelling reminder: ${key}`);
+    if (key in this.reminderList &&
+      this.reminderList[key]) {
+        this.reminderList[key].cancel();
+        delete this.reminderList[key];
+        Logger.log(`Dequeued ${key}.`);
+      }
+  }
+
+  async queueReminders() {
     const list = await this.list({
       command: REMIND,
     });
 
-    
-
-
-
+    list.map(async (reminder) => {
+      await this.loadReminder(reminder);
+    });
   }
 
   async processAutomarkets(inputOwner = null) {
@@ -132,7 +213,7 @@ export default class Scheduler {
 
     const cmd = this.bot.commands.get(MARKET);
     return await Promise.all(list.map(async (entry) => {
-      console.log(entry);
+      Logger.log(entry);
       const { channelid, owner, args, result, _id, itemid, } = entry;
       Logger.log(`Processing id=${_id} owner=${owner} itemid=${itemid} args=${args}`);
       const message = {
@@ -166,7 +247,7 @@ export default class Scheduler {
     command,
     owner = null,
   }) {
-    
+
     const clearParams = {
       command: command,
     };
@@ -175,6 +256,12 @@ export default class Scheduler {
       clearParams.owner = owner;
     }
 
+    if (command === REMIND) {
+      const list = await this.list(clearParams);
+      await Promise.all(list.map(async (entry) => {
+        return await this.cancelReminder(entry._id);
+      }));
+    }
     return await this.collection.deleteMany(clearParams);
   }
 
@@ -201,6 +288,8 @@ export default class Scheduler {
     owner = null,
   }) {
     
+    //Logger.debug(`command: ${command} | owner: ${owner}`);
+
     const findParams = {
       command: { $eq: command },
     };
@@ -211,7 +300,7 @@ export default class Scheduler {
 
     const cursor = await this.collection.find(findParams);
     cursor.sort({
-      sleepUntil: 1,
+      creationDateTime: 1,
     });
     
     const list = await cursor.toArray();
@@ -226,26 +315,33 @@ export default class Scheduler {
     name = null,
     itemid = null,
     result = null,
-    msg = null,
+    message = null,
     type = null,
+    creationDateTime = null,
     sleepUntil = null, // denotes when next time should occur for reminder
-    interval = null, // denotes cron for reminder
-    autoRemove = false,
+    repeat = false,
+    cron = null,
+    modifier = null,
+    timeElement = null,
   }) {
 
     const params = {
       channelid: channelid,
       command: command,
       owner: owner,
-      args: args,
+      creationDateTime: creationDateTime,
     };
 
     if (command === TIMEZONE) {
       params._id = owner;
     }
 
-    if (msg) {
-      params.msg = msg;
+    if (args) {
+      params.args = args;
+    }
+
+    if (message) {
+      params.message = message;
     }
 
     if (type) {
@@ -268,14 +364,30 @@ export default class Scheduler {
       params.sleepUntil = sleepUntil;
     }
 
-    if (interval) {
-      params.interval = interval;
+    if (repeat) {
+      params.repeat = repeat;
     }
 
-    if (autoRemove) {
-      params.autoRemove = autoRemove;
+    if (creationDateTime) {
+      params.creationDateTime = creationDateTime;
     }
 
-    return await this.collection.insertOne(params);
+    if (modifier) {
+      params.modifier = modifier;
+    }
+
+    if (cron) {
+      params.cron = cron;
+    }
+
+    if (timeElement) {
+      params.timeElement = timeElement;
+    }
+
+    const insertResult = await this.collection.insertOne(params);
+    if (command === REMIND) {
+      await this.loadReminder(insertResult.ops[0]);
+    }
+    return insertResult;
   }
 }

@@ -3,39 +3,58 @@ import Command from "../utils/command";
 import PrettyPrinter from "../utils/prettyPrinter";
 import DataTable from "../utils/datatable";
 import Moment from "moment-timezone";
+import Reminder, { REMIND_TYPE, CRON_DATE } from "../utils/reminder";
+import cronstrue from "cronstrue";
+import moment from "moment";
 
 // regex
-const inRegex = /in(?!.*\sin).*/;
-const atRegex = /at(?!.*\sat).*/;
-const everyRegex = /every(?!.*\severy).*/;
 const momenturl = 'https://momentjs.com/timezone/';
+Moment.locale('en', {
+  calendar: {
+    sameDay : '[at] LT',
+    nextDay : '[tomorrow at] LT',
+    nextWeek : '[on] ddd [at] LT',
+    sameElse : '[on] lll'
+  }
+});
 
 export const TIMEZONE = "remind-timezone";
 export const REMIND = "remind";
 
-export default class Reminder extends Command {
+export default class Remind extends Command {
   constructor(bot) {
     super(bot, {
       name: "remind",
       description: `Set a reminder so that the bot will ping you.\n* Use subcommand **list** to see all your reminders.\n* Use subcommand **remove** to remove one of your reminders based on the id from the list. You can provide a list of comma separated ids.\n* Use subcommand **clear** to remove **ALL** reminders from your list.\n* Use subcommand **timezone** to set it to your local timezone.\n In order for you to know your timezone, visit ${momenturl}`,
       usage: `${bot.prefix}remind <message> in <duration>\n\n` +
       `${bot.prefix}remind <message> at <time> (requires you to have timezone set up.)\n\n` +
-      `${bot.prefix}remind ${bot.subprefix}timezone <timezone>. **E.g. ${bot.prefix}remind ${bot.subprefix}timezone Australia/Sydney.** \n\n` +
+      `${bot.prefix}remind ${bot.subprefix}timezone <timezone>. **E.g. ${bot.prefix}remind ${bot.subprefix}timezone sydney.** \n\n` +
       `${bot.prefix}remind ${bot.subprefix}list \n\n` +
       `${bot.prefix}remind ${bot.subprefix}remove <entry id> [, <entry id>, ...].\n\n` +
       `${bot.prefix}remind ${bot.subprefix}clear`,
       aliases: ["rmb"],
       category: "General",
-      subCommands: ["list", "clear", "remove", "timezone"],
+      subCommands: ["list", "clear", "remove", "timezone", "in", "at", "every", "cron"],
     });
+    this.botprefix = bot.prefix;
+    this.botsubprefix = bot.subprefix;
   }
 
   async run(message, args) {
     
     // reject empty messages
     if (!args.length) {
-      const reply = `Please specify arguments for reminder.`;
-      await message.channel.send(reply);
+
+      const timezone = await this.bot.scheduler.get(message.author.id);
+      const embed = {
+          title: `**How to use reminder**`,
+          description: `**1.** Set your timezone by using the \`${this.botsubprefix}timezone\` subcommand before queuing a reminder. ` +
+          (timezone ? `\n> Your current timezone is set to: **${timezone.args} (${Moment.tz(timezone.args).format("Z z")}).**` 
+          : `\n> **You do not have timezone set, thus any reminders queued is assumed to be +00:00 GMT.** Visit ${momenturl} to find out your timezone.`) +
+          `\n**2.** Queue a reminder using one of the 3 methods \`in\`, \`at\`, \`every\`, \`cron\`.` +
+          `\nUse \`${this.botsubprefix}in\`, \`${this.botsubprefix}at\`, \`${this.botsubprefix}every\`, \`${this.botsubprefix}cron\` for more information on each use case.`,
+        };
+      await message.channel.send({embed: embed});
       return "No args";
     }
 
@@ -62,27 +81,35 @@ export default class Reminder extends Command {
       return subCommand;
     }
 
-    const argSentence = args.join(" ");
-
-    // *in* pattern
-    const inMatch = argSentence.match(inRegex);
-
-    // *every* pattern
-
-    // *at* pattern
-
-    // *cron* pattern
-
-    const match = inMatch;
-
-    if (!match) {
+    // get the matching regex
+    const timezone = await this.bot.scheduler.get(message.author.id);
+    const sentence = args.join(" ");
+    const params = Reminder.getParsedMatchObject(sentence, timezone ? timezone.args : null);
+    if (!params) {
       await message.channel.send(`You are not using a valid pattern to queue reminder. Please try again.`);
       return;
     }
 
+    const { replyMessage, type, sleepUntil, modifier, repeat, timeElement } = params;
+    if (params.replyMessage === "") {
+      await message.channel.send(`You cannot remind yourself with an empty message. Please try again.`);
+      return;
+    }
+
+    if (!modifier) {
+      await message.channel.send(`Your cron pattern was invalid. Please try again.`);
+      return;
+    }
+
+    if (Reminder.objectPropertiesAllZero(modifier)) {
+      await message.channel.send(`You cannot have time offsets of 0 or less. Please try again.`);
+      return;
+    }
+
     // valid automarket
-    Logger.log(`Queuing reminder from ${message.author.username}(${message.author.id}) on channel ${message.channel.name}(${message.channel.id}) with message: ${argSentence}`);
+    Logger.log(`Queuing reminder from ${message.author.username}(${message.author.id}) on channel ${message.channel.name}(${message.channel.id}) with message: ${sentence}`);
    
+    
     // insert into scheduler
     // restore the argument to what it would have looked like
     // if it was ran normally
@@ -90,20 +117,101 @@ export default class Reminder extends Command {
       channelid: message.channel.id,
       command: REMIND,
       owner: message.author.id,
-      type: 'in',
-      msg: argSentence,
-      sleepUntil: Date.now(),
-      interval: false,
+      type: type,
+      message:  replyMessage,
+      creationDateTime: new Date().toISOString(),
+      sleepUntil: sleepUntil.toISOString(),
+      modifier: modifier,
+      repeat: repeat,
+      timeElement: timeElement,
     });
 
-    Logger.log(JSON.stringify(result.ops));
+    Logger.log(JSON.stringify(result.ops[0]));
 
+    
     if (result.result.ok) {
       Logger.log("Successfully queued!");
-      const reply = `Reminder queued for ${message.author.username} with the following message: ${argSentence} `;
+      const reply = `The message \`${replyMessage}\` has been added for ${message.author.username}.\nYou will be reminded` +
+      (type === REMIND_TYPE.IN ? ` in ${Reminder.modifierToSentence(modifier)} (${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()})` :
+      (type === REMIND_TYPE.EVERY) ? ` every ${Reminder.modifierToSentence(modifier)} (next one at ${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()})` :
+      (type === REMIND_TYPE.AT) ? ` at ${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()}` : 
+      (type === REMIND_TYPE.CRON) ? ` ${cronstrue.toString(modifier).toLowerCase()} (cron)` :
+      `${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()}`);
       await message.channel.send(reply);
       return reply;
     }
+  }
+
+  async in(message) {
+    const embed = {
+      title: `**How to use reminder - In mode**`,
+      description: `\`In\` should be used if you need a message to be sent ***in*** a certain amount of time from now.` +
+          `\nIt will interpret the last \`in\` in your message as the time parameter.` +
+          `\n> ${this.botprefix}remind <message> in <#> <time unit>` +
+          `\nFor example:` +
+          `\n> ${this.botprefix}remind hi in 5 min` +
+          `\nwill ping you the message "hi" in 5 min.`,
+    };
+    await message.channel.send({embed: embed});
+  }
+
+  async at(message) {
+    const embed = {
+      title: `**How to use reminder - At mode**`,
+      description: `\`At\` should be used if you need a message to be sent ***at*** a particular time.` +
+      `\nIt will interpret the last \`at\` in your message as the time parameter.` +
+      `\n> ${this.botprefix}remind <message> at <hh:mm tt>` +
+      `\nFor example:` +
+      `\n> ${this.botprefix}remind hi at 8:00pm` +
+      `\nwill ping you the message "hi" at 8:00pm ` +
+      `\n> **Notes:**` +
+      `\n> - Your timezone will matter for how it figures out when to send the message. Changing your timezone will **NOT** affect existing queued items.` +
+      `\n> - If you do **not** specify an AM or PM, it will **assume** the next available one.`,
+    };
+    await message.channel.send({embed: embed});
+  }
+
+  async every(message) {
+    const embed = {
+      title: `**How to use reminder - Every mode**`,
+      description: `\`Every\` should be used if you need a message to be sent ***every*** x amount of time that passes starting from now.` +
+      `\nIt will interpret the last \`every\` in your message as the time parameter.` +
+      `\n> ${this.botprefix}remind <message> every <#> <time unit>` +
+      `\nFor example:` +
+      `\n> ${this.botprefix}remind hi every 5 min` +
+      `\nwill ping you the message "hi" every 5 minutes from now.`,
+    }
+    await message.channel.send({embed: embed});
+  }
+
+  async cron(message) {
+    const embed = {
+      title: `**How to use reminder - Cron mode**`,
+      description: `\`Cron\` should be used if you need a message to be sent periodically at fixed times, dates, or intervals.` +
+      `\nIt will interpret the last \`cron\` in your message as the time parameter.` +
+      `\n> ${this.botprefix}remind <message> cron <cron pattern>` +
+      `\nFor example:` +
+      `\n> ${this.botprefix}remind hi cron 5 * * * *` +
+      `\nwill ping you the message "hi" at the 5th minute of each hour` +
+      `\nTo do a more repetitive example:` +
+      `\n> ${this.botprefix}remind hi cron */5 * * * *` +
+      `\nwill ping you the message "hi" every 5th minute of each hour (0, 5, 10, 15...)` +
+      `\n> Cron Patterns:` +
+      `\n> \`\`\`*  *  *  *  *` +
+      `\n> ┬  ┬  ┬  ┬  ┬` +
+      `\n> │  │  │  │  │` +
+      `\n> │  │  │  │  └ day of week (0 - 7) (0 or 7 is Sun)` +
+      `\n> │  │  │  └─── month (1 - 12)` +
+      `\n> │  │  └────── day of month (1 - 31)` +
+      `\n> │  └───────── hour (0 - 23)` +
+      `\n> └──────────── minute (0 - 59)` +
+      `\n> \`\`\`` +
+      `\nIf you need more resources on constructing the correct cron pattern, please refer to https://crontab.guru/.` +
+      `\n> Differences with the **Every mode**` +
+      `\n> - Every operates on regular intervals you set from now. Cron works solely based on a predefined pattern.` +
+      `\n> - Every can do irregular intervals such as every 21 minutes. Cron can do it too, but irregular intervals will be cut off when that unit of time completes its cycle. E.g. */21 * * * * (every 21 minutes in the hour) = 8:21, 8:42, 9:21, 9:42...`,
+    }
+    await message.channel.send({embed: embed});
   }
 
   // clearing messages
@@ -139,17 +247,19 @@ export default class Reminder extends Command {
     const timezone = await this.bot.scheduler.get(message.author.id);
     const header = {
       id: "#",
-      msg: "Message",
+      message: "Message",
       sleepUntil: `Schedule (${Moment.tz(timezone ? timezone.args : null).format("Z z")})`,
+      method: "Method",
     };
 
     const displayList = list.map((row, index) => {
       row.id = (index + 1).toString();
-      row.sleepUntil = Moment.tz(row.sleepUntil, null).format('YYYY-MM-DD HH:mm');
+      row.sleepUntil = moment(row.sleepUntil).isSame(moment(CRON_DATE)) 
+        ? cronstrue.toString(row.modifier).toLowerCase()
+        : Moment.tz(row.sleepUntil, timezone ? timezone.args : null).calendar();
+      row.method = `${row.type} ${Reminder.modifierToSentence(row.modifier)}`;
       return row;
     });
-     
-    console.log(displayList);
 
     const dt = new DataTable({
       header: header,
@@ -193,21 +303,26 @@ export default class Reminder extends Command {
       return reply;
     }
 
+    const timezone = await this.bot.scheduler.get(message.author.id);
+    const header = {
+      message: "Message",
+      sleepUntil: `Schedule (${Moment.tz(timezone ? timezone.args : null).format("Z z")})`,
+      method: "Method",
+    };
+    
     const removedReply = await Promise.all(removeIds.map(async (id) => {
       Logger.log(`Attempting to delete reminder with id: ${id}.`);
+      await this.bot.scheduler.cancelReminder(id);
       const deleteEntryInfo = await this.bot.scheduler.get(id);  
       const result = await this.bot.scheduler.remove(id);
-      Logger.log(result);
-      deleteEntryInfo.sleepUntil = Moment.tz(deleteEntryInfo.sleepUntil, null).format('YYYY-MM-DD HH:mm');
+      Logger.debug(result);
+      deleteEntryInfo.sleepUntil = moment(deleteEntryInfo.sleepUntil).isSame(moment(CRON_DATE)) 
+      ? cronstrue.toString(deleteEntryInfo.modifier).toLowerCase() 
+      : Moment.tz(deleteEntryInfo.sleepUntil, timezone ? timezone.args : null).calendar(); 
+      deleteEntryInfo.method = `${deleteEntryInfo.type} ${Reminder.modifierToSentence(deleteEntryInfo.modifier)}`;
       return deleteEntryInfo; 
     }));
 
-    const timezone = await this.bot.scheduler.get(message.author.id);
-    const header = {
-      msg: "Message",
-      sleepUntil: `Schedule (${Moment.tz(timezone ? timezone.args : null).format("Z z")})`,
-    };
-    
     const dt = new DataTable({
       header: header,
       contents: removedReply,
@@ -241,23 +356,25 @@ export default class Reminder extends Command {
         return;
       }
 
-      await message.channel.send(`Your current timezone is set to: **${result[0] ? result[0].args : "Not Set"}**.\n`);
+      const timezone = result[0] ? `${result[0].args} (${Moment.tz(result[0].args).format("Z z")})` : `Not set`;
+      await message.channel.send(`Your current timezone is set to: **${timezone}**.\n`);
       return;
     }
 
     const list = Moment.tz.names();
-    if (!list.includes(args[0])) {
+    const tz = list.filter(tz => tz.includes(args[0].replace(/^\w/, c => c.toUpperCase()))); // capitalize first letter for search
+    if (!tz.length) {
       await message.channel.send(`Your timezone is not in the list!`);
       return;
     }
-    
-    Logger.log(`Adding remind-timezone for ${message.author.username} (${message.author.id}) with timezone: ${args[0]}.`);
+    Logger.debug(tz);
+    Logger.log(`Adding remind-timezone for ${message.author.username} (${message.author.id}) with timezone: ${tz[0]}.`);
 
     const params = {
       channelid: message.channel.id,
       command: TIMEZONE,
       owner: message.author.id,
-      args: args[0],
+      args: tz[0],
     }
 
     const result = await this.bot.scheduler.update(message.author.id, params, true);
@@ -265,7 +382,7 @@ export default class Reminder extends Command {
     Logger.log(JSON.stringify(result.ops));
     if (result.result.ok) {
       Logger.log("Successfully added!");
-      const reply = `Timezone added for ${message.author.username} as ${args[0]}.`;
+      const reply = `Timezone added for ${message.author.username} as ${tz[0]}.`;
       await message.channel.send(reply);
       return reply;
     }
