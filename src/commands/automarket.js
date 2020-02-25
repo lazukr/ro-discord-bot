@@ -99,6 +99,7 @@ export default class NovaAutoMarket extends Command {
       name: datatable.name,
       result: "",
       args: `${JSON.stringify(args)}`,
+      creationDateTime: new Date().toISOString(),
     });
 
     Logger.log(JSON.stringify(result.ops));
@@ -299,7 +300,7 @@ export default class NovaAutoMarket extends Command {
       return;
     }
 
-    console.log(list);
+    //console.log(list);
     const resultList = list.filter(entry => entry.result);
 
     if (!resultList) {
@@ -337,8 +338,7 @@ export default class NovaAutoMarket extends Command {
       }
 
       const session = args[0];
-      console.log(session);
-
+      Logger.log(`session: ${session}`);
       const loginResult = await Scraper.login(session);
       if (!loginResult) {
         message.channel.send(`The session key did not work! Try again!`);

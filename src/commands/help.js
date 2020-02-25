@@ -44,15 +44,6 @@ export default class Help extends Command {
       },
 
     };
-
-
-    const reply = '```\n' +
-      `Name: ${command.help.name}\n\n` +
-      `Aliases: ${command.configuration.aliases.toString()}\n\n` +
-      `Description: ${command.help.description}\n\n` +
-      `Category: ${command.help.category}\n\n` +
-      `Usage: ${command.help.usage}\n\n` +
-      '```';
     message.channel.send(embed);
   }
 
