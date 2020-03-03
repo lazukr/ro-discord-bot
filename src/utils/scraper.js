@@ -21,6 +21,7 @@ export default class Scraper {
   static notified = false;
   static session = sessionConfig.session ? sessionConfig.session : '';
   static bot = null;
+
   static async login(session = null) {
 
     const options = {
@@ -138,6 +139,28 @@ export default class Scraper {
     });
   
   }  
+
+  static async getDadJoke() {
+    const options = {
+      method: 'GET',
+      uri: 'https://icanhazdadjoke.com/',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'request (https://github.com/lazukr/ro-discord-bot)',
+      },
+      transform: (body) => {
+        return JSON.parse(body);
+      }
+    };
+  
+    return rp(options)
+      .then(res => {
+        return res;
+      })
+      .catch(err => {
+        logger.error(`An error has occurred on ${DADJOKE_URI}: ${err}`);
+      });
+  }
 }
 
 function tableToJSON({
