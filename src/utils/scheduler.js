@@ -45,8 +45,8 @@ export default class Scheduler {
     });
 
     reminderEntries.forEach(rm => {
-      const { channelid, owner, args, _id, } = rm;
-      Logger.log(`id=${_id} owner=${owner} channelid=${channelid} msg=${args}`);
+      const { channelid, owner, message, _id, } = rm;
+      Logger.log(`id=${_id} owner=${owner} channelid=${channelid} message=${message}`);
     });
 
     automarketEntries.forEach(am => {
