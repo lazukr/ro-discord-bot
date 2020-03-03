@@ -207,6 +207,7 @@ export default class Reminder extends EventEmitter {
             hour: parseInt(moment(`${hour[2]} ${hour[3]}`, "h A").format("HH")) % 12,
             minute: 0,
             strict: hour[3] ? true : false,
+            tt: hour[3] ? hour[3] : null,
         } : null;
         return timeObject;
     }
@@ -224,7 +225,7 @@ export default class Reminder extends EventEmitter {
         const date = test ? test.toISOString() : new Date().toISOString();
         const now = moment.tz(date, timezone);
         const expected = moment.tz(date, timezone)
-            .hour(time.hour)
+            .hour(time.hour + (time.tt ? time.tt.toLowerCase() === 'pm' ? 12 : 0 : 0))
             .minute(time.minute)
             .second(0);
         while (expected.isBefore(now)) {

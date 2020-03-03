@@ -314,31 +314,31 @@ describe(`Testing the method: ${chalk.cyan("getDurationObject(args)")} - explici
     it ("explicit 0 digit seconds", () => {
         const args = "0 s";
         const result = Reminder.getDurationObject(args);
-        expect(result.second).toBe(1);
+        expect(result.second).toBe(0);
     });
 
     it ("explicit 0 digit minutes", () => {
         const args = "0 m";
         const result = Reminder.getDurationObject(args);
-        expect(result.minute).toBe(1);
+        expect(result.minute).toBe(0);
     });
 
     it ("explicit 0 digit hours", () => {
         const args = "0 h";
         const result = Reminder.getDurationObject(args);
-        expect(result.hour).toBe(1);
+        expect(result.hour).toBe(0);
     });
 
     it ("explicit 0 digit days", () => {
         const args = "0 d";
         const result = Reminder.getDurationObject(args);
-        expect(result.day).toBe(1);
+        expect(result.day).toBe(0);
     });
 
     it ("explicit 0 digit weeks", () => {
         const args = "0 w";
         const result = Reminder.getDurationObject(args);
-        expect(result.week).toBe(1);
+        expect(result.week).toBe(0);
     });
 });
 
@@ -607,6 +607,20 @@ describe(`Testing the method: ${chalk.cyan("applyDateSet(time, timezone, test=nu
             hour: 0,
             minute: 0,
             strict: true,
+        };
+
+        const result = Reminder.applyDateSet(time, timezone, date);
+        expect(result.format()).toBe(expectedResult);
+    });
+
+    it ("handles explict pm correctly", () => {
+        const date = new Date('Dec 17 1995 18:45:00 GMT+0000');
+        const expectedResult = "1995-12-17T23:00:00-08:00";
+        const time = {
+            hour: 11,
+            minute: 0,
+            strict: true,
+            tt: 'PM',
         };
 
         const result = Reminder.applyDateSet(time, timezone, date);

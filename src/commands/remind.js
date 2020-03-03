@@ -130,7 +130,7 @@ export default class Remind extends Command {
       const reply = `The message \`${replyMessage}\` has been added for ${message.author.username}.\nYou will be reminded` +
       (type === REMIND_TYPE.IN ? ` in ${Reminder.modifierToSentence(modifier)} (${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()})` :
       (type === REMIND_TYPE.EVERY) ? ` every ${Reminder.modifierToSentence(modifier)} (next one at ${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()})` :
-      (type === REMIND_TYPE.AT) ? ` at ${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()}` : 
+      (type === REMIND_TYPE.AT) ? ` ${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()}` : 
       (type === REMIND_TYPE.CRON) ? ` ${cronstrue.toString(modifier).toLowerCase()} (cron)` :
       `${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()}`);
       await message.channel.send(reply);
