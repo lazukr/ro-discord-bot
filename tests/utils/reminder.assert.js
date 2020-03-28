@@ -1,6 +1,20 @@
 import Reminder, { REMIND_TYPE } from '../../src/utils/reminder';
 import chalk from 'chalk';
 
+function *permute(list, length = list.length) {
+    if (length <= 1) {
+        yield list.slice();
+    } else {
+        for (let i = 0; i < length; i++) {
+            yield *permute(list, length - 1);
+            const j = length % 2 ? 0 : i;
+            [list[length - 1], list[j]] = [list[j], list[length - 1]];
+        }
+    }
+}
+
+
+
 describe(`Testing the method: ${chalk.cyan("objectPropertiesAllZero(object)")}`, () => {
     it("True when all properties in object is zero.", () => {
         const object = {
@@ -66,6 +80,46 @@ describe(`Testing the method: ${chalk.cyan("getMatch(sentence)")}`, () => {
         expect(result.cronMatch).toBeNull();
         expect(result.atMatch).toBeNull();
     });
+
+    it("always finds the last token to match", () => {
+        const permutations = Array.from(permute("in every cron at".split(' ')));
+        permutations.forEach(permutation => {
+            const args = `test ${permutation.join(" ")} test`;
+            const result = Reminder.getMatch(args);
+            const match = permutation[permutation.length - 1];
+
+            switch (match) {
+                case "in": {
+                    expect(result.inMatch).not.toBeNull();
+                    expect(result.everyMatch).toBeNull();
+                    expect(result.cronMatch).toBeNull();
+                    expect(result.atMatch).toBeNull();
+                    break;
+                }
+                case "at": {
+                    expect(result.inMatch).toBeNull();
+                    expect(result.everyMatch).toBeNull();
+                    expect(result.cronMatch).toBeNull();
+                    expect(result.atMatch).not.toBeNull();
+                    break;
+                }
+                 case "every": {
+                    expect(result.inMatch).toBeNull();
+                    expect(result.everyMatch).not.toBeNull();
+                    expect(result.cronMatch).toBeNull();
+                    expect(result.atMatch).toBeNull();
+                    break;
+                 }
+                 case "cron": {
+                    expect(result.inMatch).toBeNull();
+                    expect(result.everyMatch).toBeNull();
+                    expect(result.cronMatch).not.toBeNull();
+                    expect(result.atMatch).toBeNull();
+                    break;
+                 }
+            }
+        });
+    }); 
 });
   
 describe(`Testing the method: ${chalk.cyan("getDurationObject(args)")}`, () => {
@@ -504,6 +558,7 @@ describe(`Testing the method: ${chalk.cyan("getTimeObject(args)")}`, () => {
             hour: 4,
             minute: 0,
             strict: false,
+            tt: null,
         }
         const result = Reminder.getTimeObject(args);
         expect(result).toStrictEqual(expectedResult);
@@ -515,6 +570,7 @@ describe(`Testing the method: ${chalk.cyan("getTimeObject(args)")}`, () => {
             hour: 5,
             minute: 0,
             strict: true,
+            tt: "am",
         }
         const result = Reminder.getTimeObject(args);
         expect(result).toStrictEqual(expectedResult);
@@ -526,6 +582,7 @@ describe(`Testing the method: ${chalk.cyan("getTimeObject(args)")}`, () => {
             hour: 7,
             minute: 0,
             strict: true,
+            tt: "pm",
         }
         const result = Reminder.getTimeObject(args);
         expect(result).toStrictEqual(expectedResult);

@@ -39,16 +39,16 @@ export default class Scheduler {
       command: REMIND,
     });
 
-    Logger.log("Automarkets");
-    const automarketEntries = await this.list({
-      command: MARKET,
-    });
-
     reminderEntries.forEach(rm => {
       const { channelid, owner, message, _id, } = rm;
       Logger.log(`id=${_id} owner=${owner} channelid=${channelid} message=${message}`);
     });
 
+    Logger.log("Automarkets");
+    const automarketEntries = await this.list({
+      command: MARKET,
+    });
+    
     automarketEntries.forEach(am => {
       const { channelid, owner, args, _id, itemid, sleepUntil, creationDateTime } = am;
       Logger.log(`id=${_id} owner=${owner} channelid=${channelid} itemid=${itemid} args=${args} creationDateTime=${creationDateTime} sleepUntil=${sleepUntil}`);

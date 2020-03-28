@@ -66,23 +66,43 @@ export default class Reminder extends EventEmitter {
      }
 
     static getMatch(sentence) {
+
         // *in* pattern
         const inMatch = sentence.match(inRegex);
+        //console.log(inMatch);
 
+    
         // *every* pattern
         const everyMatch = sentence.match(everyRegex);
-    
+
+        //console.log(everyMatch);
         // *at* pattern
         const atMatch = sentence.match(atRegex);
-
+        //console.log(atMatch);
         // *cron* pattern
         const cronMatch = sentence.match(cronRegex);
+        //console.log(cronMatch);
+
+        const matches = [inMatch, everyMatch, atMatch, cronMatch].filter(x => x);
+        //console.log(matches);
+
+        // should be able to do something with this, but can't think of anything right now.
+        /*
+        const final = matches.length ? matches.reduce((prev, curr) => {
+            return prev.index > curr.index ? prev : curr;
+        }, {index: 0}) : null;
+
+        console.log(final);
+        */
+
+        const selection = Math.max.apply(Math, matches.map(match => match ? match.index : 0));
+        //console.log(selection);
 
         return {
-            inMatch: inMatch,
-            everyMatch: everyMatch,
-            atMatch: atMatch,
-            cronMatch: cronMatch,
+            inMatch: inMatch ? inMatch.index === selection ? inMatch : null : null,
+            everyMatch: everyMatch ? everyMatch.index === selection ? everyMatch : null : null,
+            atMatch: atMatch ? atMatch.index === selection ? atMatch : null : null,
+            cronMatch: cronMatch ? cronMatch.index === selection ? cronMatch : null : null,
         }
     }
 
