@@ -78,7 +78,7 @@ export default class Scraper {
         Logger.error(`Nova login failed! ${err}`);
         if (!Scraper.notified) {
           const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-          adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check!`);
+          adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check! ${err.statusCode}: ${message}`);
           Scraper.notified = true;
         }
         return 0;
@@ -111,6 +111,10 @@ export default class Scraper {
     selector,
     index = null,
   }) {
+    if (!page) {
+      return null;
+    }
+
     if (index !== null) {
       return page(selector).get(index) || null;
     }
