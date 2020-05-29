@@ -17,6 +17,8 @@
     "discord.js": "^11.5.1",
     "enmap": "^0.4.2",
     "googleapis": "^51.0.0",
+    "got": "^11.1.4",
+    "hooman": "^1.2.5",
     "moment": "^2.22.2",
     "moment-timezone": "^0.5.21",
     "node-persist": "^3.0.1",
