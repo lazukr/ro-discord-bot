@@ -154,18 +154,18 @@ async function remove(message, bot, entry) {
   message.channel.send(`${removed}`);
 }
 
-async function setSession(message, session = null) {
+async function setSession(message, captcha = null) {
 
-  if (!session) {
-    message.channel.send(`Please provide session key`);
+  if (!captcha) {
+    message.channel.send(`Please provide captcha key`);
     return;
   }
 
-  logger.info("Setting Automarket Session...");
-  const loginResult = await sc.login(session);
+  logger.info("Setting Automarket Cookies...");
+  const loginResult = await sc.login(captcha);
 
   if (!loginResult) {
-    message.channel.send(`The session didn't work! Try again.`);
+    message.channel.send(`The captcha didn't work! Try again.`);
     return;
   }
 
