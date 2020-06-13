@@ -5,6 +5,7 @@ import config from '../../config.json';
 import sessionConfig from '../../session.json';
 import fs from 'fs';
 import Scheduler from './scheduler';
+import hooman from 'hooman';
 
 export const TABLE_TYPE = Object.freeze({
   DEFAULT: 0,
@@ -14,36 +15,71 @@ export const TABLE_TYPE = Object.freeze({
   VEND: 4,
 });
 const LOGIN_BUTTON = 'input[type=submit]';
+const LINK = 'https://novaragnarok.com';
 // this function handles getting pages from websites.
 
 export default class Scraper {
   static notLoggedInReply = `Bot is not logged in and could not add the automarket. This will be added automatically when the bot is logged in.`;
   static notified = false;
-  static session = sessionConfig.session ? sessionConfig.session : '';
+  static cookie = sessionConfig.cookie ? sessionConfig.cookie : '';
   static bot = null;
 
-  static async login(session = null) {
+  static async login(captcha = null) {
 
     const options = {
-      method: 'POST',
-      uri: 'https://www.novaragnarok.com',
-      qs: {
+      searchParams: {
         module: 'account',
         action: 'login',
       },
       form: {
         server: 'NovaRO',
         ...config.novaCredentials,
+        'g-recaptcha-response': captcha,
       },
-      followAllRedirects: true,
-      headers: {
-        Cookie: `fluxSessionData=${session ? session : Scraper.session}`,
-      },
-      transform: (body, response) => {
-        return cheerio.load(body);
-      },
+    };
+
+    try {
+      const response = await hooman.post(LINK, options);
+      const $ = cheerio.load(response.body);
+      try {
+        const loginBtn = Scraper.getElement({
+          page: $,
+          selector: LOGIN_BUTTON,
+          index: 1,
+        }).attribs.value;
+
+        if (loginBtn) {
+          Logger.log('Nova login unsuccessful.');
+          if (!Scraper.notified) {
+            const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
+            adminChannel.send(`<@${this.bot.admin.id}> Bot could not login. Please set session!`);
+            Scraper.notified = true;
+          }
+          return 0;
+        }
+      } catch {
+        Scraper.notified = false;
+        if (!captcha) {
+          return 1;
+        }
+        sessionConfig.cookie = response.request.options.headers.cookie;
+        Scraper.cookie = sessionConfig.cookie;
+        fs.writeFileSync('session.json', JSON.stringify(sessionConfig));
+        this.bot.scheduler.processQueues();
+        return 1;
+      }
+    } catch (err) {
+      if (!Scraper.notified) {
+        const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
+        adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check! ${err}`);
+        Scraper.notified = true;
+      }
+      return 0;
     }
-    
+
+
+
+    /*
     return rp(options)
       .then($ => {
         try {
@@ -83,9 +119,49 @@ export default class Scraper {
         }
         return 0;
       });
+
+
+
+          const options = {
+      method: 'POST',
+      uri: 'https://www.novaragnarok.com',
+      qs: {
+        module: 'account',
+        action: 'login',
+      },
+      form: {
+        server: 'NovaRO',
+        ...config.novaCredentials,
+      },
+      followAllRedirects: true,
+      headers: {
+        Cookie: `fluxSessionData=${session ? session : Scraper.session}`,
+      },
+      transform: (body, response) => {
+        return cheerio.load(body);
+      },
+    }
+      */
   }
 
   static async getPage(uri, qs = {}) {
+
+    const options = {
+      searchParams: qs,
+      headers: {
+        cookie: Scraper.cookie,
+      },
+    };
+
+    try {
+      const response = await hooman.get(uri, options);
+      return cheerio.load(response.body);
+    } catch (error) {
+      Logger.error(`An error occurred while making a page request: ${e}`);
+    }
+
+
+    /*
     const options = {
       method: 'GET',
       uri: uri,
@@ -104,6 +180,7 @@ export default class Scraper {
     } catch (e) {
       Logger.error(`An error occurred while making a page request: ${e}`);
     }
+    */
   }
   
   static getElement({

@@ -1,4 +1,5 @@
 import Logger from './logger';
+import hooman from 'hooman';
 
 const LINK = 'https://www.novaragnarok.com/ROChargenPHP/';
 
@@ -29,9 +30,12 @@ export default async function ROChargenPHP({
   const name = args.join('_');
   const timestamp = Date.now();
   const commandType = type === 'sig' ? 'newsig/' : 'character/';
+  const fullLink = `${LINK}${commandType}${name}/${values.first}/${values.second}?${timestamp}`;
+  const response = await hooman.get(fullLink);
+
   await message.channel.send(`\`${name} - ${values.first}/${values.second}\``, {
     files: [
-      `${LINK}${commandType}${name}/${values.first}/${values.second}?${timestamp}.png`,
+      response.rawBody,
     ]
   });
   return {

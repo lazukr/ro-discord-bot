@@ -19,6 +19,8 @@
     "cron-validator": "^1.1.0",
     "cronstrue": "^1.91.0",
     "discord.js": "^11.5.1",
+    "got": "^11.3.0",
+    "hooman": "^1.2.5",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.27",
     "mongodb": "^3.3.0-beta2",

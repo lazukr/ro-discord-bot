@@ -333,15 +333,15 @@ export default class NovaAutoMarket extends Command {
 
   async session(message, args) {
       if (!args.length) {
-        message.channel.send(`Please include a session key.`);
+        message.channel.send(`Please include a captcha key.`);
         return;
       }
 
-      const session = args[0];
-      Logger.log(`session: ${session}`);
-      const loginResult = await Scraper.login(session);
+      const captcha = args[0];
+      Logger.log(`captcha: ${captcha}`);
+      const loginResult = await Scraper.login(captcha);
       if (!loginResult) {
-        message.channel.send(`The session key did not work! Try again!`);
+        message.channel.send(`The captcha key did not work! Try again!`);
         return;
       }
 
