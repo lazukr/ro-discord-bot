@@ -55,7 +55,7 @@ function invalidInput(message, errnum) {
       message.channel.send(`Please provide a positive integer argument.`);
       return;
     case ERRNUM.FA:
-      message.channel.send(`Failed to add message, perhaps add an \`in\` clause or have a valid time offset after the \`in\` clause.`);
+      message.channel.send(`Failed to add message, perhaps you have an empty message, need an \`in\` clause or need a valid time offset after the \`in\` clause.`);
       return;
   }
 }
@@ -90,7 +90,7 @@ async function addMessage(message, bot, args) {
     invalidInput(message, ERRNUM.FA);
     return;
   }
-
+  
   const parseDate = Date.parse(scheduledItem.scheduled);
 
   const localTime = isNaN(scheduledItem.scheduled) &&
