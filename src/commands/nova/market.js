@@ -131,8 +131,6 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
   market.table.intToStrCols(nvro.HEADERS.REFINE);
   const prettyTable = new pp.PrettyTableFactory(market);
 
-  objPrint(prettyTable);
-
   LAST_QUERY = prettyTable.id;
   PREV_QUERIES[LAST_QUERY] = {
     table: prettyTable,
