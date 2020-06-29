@@ -21,10 +21,27 @@ const LINK = 'https://novaragnarok.com';
 export default class Scraper {
   static notLoggedInReply = `Bot is not logged in and could not add the automarket. This will be added automatically when the bot is logged in.`;
   static notified = false;
-  static cookie = sessionConfig.cookie ? sessionConfig.cookie : '';
+  static cookie = '';
   static bot = null;
 
+  static async hit(link) {
+    try {
+      const { body, request } = await hooman.get(link);
+      return request.options.headers.cookie;
+    } catch (e) {
+      const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
+      logger.error(e);
+      adminChannel.send(`<@${this.bot.admin.id}> Bot could not hit page: ${link}. Error message ${e}. Please check!`);
+    }
+  }
+  
+
   static async login(captcha = null) {
+    const loginCookie = await this.hit(LINK);
+
+    if (!loginCookie) {
+      return;
+    }
 
     const options = {
       searchParams: {
@@ -36,6 +53,9 @@ export default class Scraper {
         ...config.novaCredentials,
         'g-recaptcha-response': captcha,
       },
+      headers: {
+        Cookie: loginCookie,
+      }
     };
 
     try {
