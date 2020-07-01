@@ -30,7 +30,7 @@ export default class Scraper {
       return request.options.headers.cookie;
     } catch (e) {
       const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-      logger.error(e);
+      Logger.error(e);
       adminChannel.send(`<@${this.bot.admin.id}> Bot could not hit page: ${link}. Error message ${e}. Please check!`);
     }
   }
