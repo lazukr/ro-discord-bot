@@ -154,7 +154,7 @@ async function remove(message, bot, entry) {
   message.channel.send(`${removed}`);
 }
 
-async function setSession(message, captcha = null) {
+async function setSession(message, captcha) {
 
   if (!captcha) {
     message.channel.send(`Please provide captcha key`);
@@ -162,13 +162,14 @@ async function setSession(message, captcha = null) {
   }
 
   logger.info("Setting Automarket Cookies...");
-  const loginResult = await sc.login(captcha);
+  const getPage = await sc.login(captcha);
 
-  if (!loginResult) {
+  if (!getPage) {
     message.channel.send(`The captcha didn't work! Try again.`);
     return;
   }
 
+  tf.getPage = getPage;
   message.channel.send(`Session has been set!`);
 }
 
@@ -224,14 +225,13 @@ async function addAutomarket(message, bot, args) {
   console.log(filters);  
   
   
-  const interval = await bot.scheduler.getCronInterval();
   const props = {
     channel: message.channel.id,
     ownerid: message.author.id,
     owner: message.author.username,
     type: tf.TYPE.AUTOMARKET,
     args: args,
-    interval: interval,
+    //interval: interval,
     itemID: itemID,
     filters: filters,
     name: item,
@@ -245,7 +245,7 @@ async function addAutomarket(message, bot, args) {
   }
  
   const fullItemID = isNaN(item) ? `${itemID} - ${item}` : itemID;
-  logger.info(`automarket for itemID ${fullItemID} set for ${interval} minute${interval ? "s" : ""}`);
+  logger.info(`automarket for itemID ${fullItemID} set!`);
   
   const replyStringArray = [];
   replyStringArray.push(`Bear will query market for itemID \`${fullItemID}\``);

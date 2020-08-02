@@ -3,7 +3,7 @@ const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
 const objPrint = require('object-printer');
 
-const TIME_INTERVAL = 120000; // every 2 minutes
+const TIME_INTERVAL = 45000; // 45 seconds
 
 const PREV_QUERIES = {};
 let LAST_QUERY = 0;
@@ -61,7 +61,6 @@ async function doSearch(message, args) {
 
   if (search.table.contents.length === 1) {
     const itemID = search.table.contents[0].Id;
-    console.log(itemID);
     doItemId(message, itemID, filters);
     return; 
   }
@@ -78,10 +77,6 @@ async function doItemId(message, itemId, filters = {}) {
   if (itemId < 100) {                               // last 
     page = itemId;
     getFromLast(message, page, filters);
-  
-  //} else if (PREV_QUERIES.hasOwnProperty(itemId)) {  // previous
-  //  getFromPrevious(message, itemId, page, filters);
-  
   } else {
     getFromLive(message, itemId, page, filters);             // live
   }
@@ -91,33 +86,19 @@ function getFromLast(message, page, filters) {
   const msg = PREV_QUERIES[LAST_QUERY];
   if (msg) {
     logger.info("Getting from last...");
-    sendMessage(message.channel, msg.table.getPage(page, msg.filters));
-    return;
-  }
-  message.channel.send(`\`\`\`\n Last query is emtpy.\n\`\`\``);
-}
-
-function getFromPrevious(message, itemId, page, filters) {
-  LAST_QUERY = itemId;
-  const msg = PREV_QUERIES[LAST_QUERY];
-  if (msg) {
-    logger.info("Getting from previous...");
-    
     sendMessage(message.channel, msg.table.getPage(page, filters));
     return;
   }
-  message.channel.send(`\`\`\`\n Previous query did not exist.\n\`\`\``);
+  message.channel.send(`\`\`\`\n Last query is emtpy.\n\`\`\``);
 }
 
 async function getFromLive(message, itemId, page, filters, silent = 0) {
   logger.info("Getting from live...");
   
   const market = await nvro.getLiveMarketData(itemId);
-  
-  //console.log(market);
 
   if (market.error === nvro.ERROR.NO_LOGIN) {
-    message.channel.send(`Bot was unable to login.`);
+    message.channel.send(`Bot isn't logged in and can't get entry.`);
     return;
   }
 
@@ -134,7 +115,6 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
   LAST_QUERY = prettyTable.id;
   PREV_QUERIES[LAST_QUERY] = {
     table: prettyTable,
-    filters: filters,
   };
   setTimeout(function() {
     delete PREV_QUERIES[this.id];
@@ -155,7 +135,6 @@ function sendMessage(channel, message) {
       channel.send(err.message);
     });
 }
-
 
 exports.info = {
   name: "market",
