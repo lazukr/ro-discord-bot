@@ -23,11 +23,13 @@ export default class PrettyPrinter {
       `No results found. :(\n` +
       `\`\`\``;
       return {
+        name: name,
         reply: reply,
         result: false,
       };
     }
     return {
+      name: name,
       reply: printTable.get(page),
       result: true,
     };

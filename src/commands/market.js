@@ -34,7 +34,8 @@ export default class NovaMarket extends Command {
       return "No args";
     }
 
-    if (! await Scraper.login() && !silent) {
+    if (!Scraper.getPage && !silent) {
+      /*
       const result = await this.bot.scheduler.insert({
         channelid: message.channel.id,
         command: MARKETQUEUE,
@@ -45,8 +46,9 @@ export default class NovaMarket extends Command {
       if (!result.result.ok) {
         Logger.log(`Unable to insert entry: ${result}`);
       }
+      */
 
-      await message.channel.send(`Could not query market as the bot is not logged in. The developer has been notified. Once logged in, it will process the query.`);
+      await message.channel.send(`Could not query market as the bot is not logged in. The developer has been notified.`);
       return;
     }
 

@@ -16,33 +16,16 @@ export const TABLE_TYPE = Object.freeze({
 });
 const LOGIN_BUTTON = 'input[type=submit]';
 const LINK = 'https://novaragnarok.com';
+const VALID_COOKIE_TEST = 'fluxSessionData';
 // this function handles getting pages from websites.
 
 export default class Scraper {
   static notLoggedInReply = `Bot is not logged in and could not add the automarket. This will be added automatically when the bot is logged in.`;
   static notified = false;
-  static cookie = '';
+  static getPage = null;
   static bot = null;
-
-  static async hit(link) {
-    try {
-      const { body, request } = await hooman.get(link);
-      return request.options.headers.cookie;
-    } catch (e) {
-      const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-      Logger.error(e);
-      adminChannel.send(`<@${this.bot.admin.id}> Bot could not hit page: ${link}. Error message ${e}. Please check!`);
-    }
-  }
   
-
-  static async login(captcha = null) {
-    const loginCookie = await this.hit(LINK);
-
-    if (!loginCookie) {
-      return;
-    }
-
+  static async login(captcha) {
     const options = {
       searchParams: {
         module: 'account',
@@ -53,117 +36,25 @@ export default class Scraper {
         ...config.novaCredentials,
         'g-recaptcha-response': captcha,
       },
-      headers: {
-        Cookie: loginCookie,
-      }
     };
 
     try {
-      const response = await hooman.post(LINK, options);
-      const $ = cheerio.load(response.body);
-      try {
-        const loginBtn = Scraper.getElement({
-          page: $,
-          selector: LOGIN_BUTTON,
-          index: 1,
-        }).attribs.value;
-
-        if (loginBtn) {
-          Logger.log('Nova login unsuccessful.');
-          if (!Scraper.notified) {
-            const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-            adminChannel.send(`<@${this.bot.admin.id}> Bot could not login. Please set session!`);
-            Scraper.notified = true;
-          }
-          return 0;
-        }
-      } catch {
-        Scraper.notified = false;
-        if (!captcha) {
-          return 1;
-        }
-        sessionConfig.cookie = response.request.options.headers.cookie;
-        Scraper.cookie = sessionConfig.cookie;
-        fs.writeFileSync('session.json', JSON.stringify(sessionConfig));
-        this.bot.scheduler.processQueues();
-        return 1;
+      const { request } = await hooman.post(LINK, options);
+      const cookie = request.options.headers.cookie;
+      if (!cookie.includes(VALID_COOKIE_TEST)) {
+        return 0;
       }
+      Scraper.getPage = getPageWithCookie(cookie);
+      //this.bot.scheduler.processQueues();
+      return 1;
+      
     } catch (err) {
-      if (!Scraper.notified) {
-        const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-        adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check! ${err}`);
-        Scraper.notified = true;
-      }
+      const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
+      adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check! ${err}`);
       return 0;
     }
-
-
-
-    /*
-    return rp(options)
-      .then($ => {
-        try {
-          const loginBtn = Scraper.getElement({
-            page: $,
-            selector: LOGIN_BUTTON,
-            index: 1,
-          }).attribs.value; 
-          if (loginBtn) {
-            Logger.log('Nova login unsuccessful');
-            if (!Scraper.notified) {
-              const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-              adminChannel.send(`<@${this.bot.admin.id}> Bot could not login. Please set session!`);
-              Scraper.notified = true;
-            }
-            return 0;
-          }
-        } catch {
-          //Logger.log('Nova login successful!');
-          Scraper.notified = false;
-          if (!session) {
-            return 1;
-          }
-          sessionConfig.session = session;
-          Scraper.session = session;
-          fs.writeFileSync('session.json', JSON.stringify(sessionConfig));
-          this.bot.scheduler.processQueues();
-          return 1;
-        }
-      })
-      .catch(err => {
-        Logger.error(`Nova login failed! ${err}`);
-        if (!Scraper.notified) {
-          const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-          adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check! ${err.statusCode}: ${message}`);
-          Scraper.notified = true;
-        }
-        return 0;
-      });
-
-
-
-          const options = {
-      method: 'POST',
-      uri: 'https://www.novaragnarok.com',
-      qs: {
-        module: 'account',
-        action: 'login',
-      },
-      form: {
-        server: 'NovaRO',
-        ...config.novaCredentials,
-      },
-      followAllRedirects: true,
-      headers: {
-        Cookie: `fluxSessionData=${session ? session : Scraper.session}`,
-      },
-      transform: (body, response) => {
-        return cheerio.load(body);
-      },
-    }
-      */
   }
-
+  /*
   static async getPage(uri, qs = {}) {
 
     const options = {
@@ -179,29 +70,8 @@ export default class Scraper {
     } catch (error) {
       Logger.error(`An error occurred while making a page request: ${e}`);
     }
-
-
-    /*
-    const options = {
-      method: 'GET',
-      uri: uri,
-      qs: qs,
-      transform: (body, response) => {
-        //console.log(response.headers);
-        return cheerio.load(body);
-      },
-      headers: {
-        Cookie: `fluxSessionData=${Scraper.session}`,
-      }
-    };
-
-    try {
-      return await rp(options);
-    } catch (e) {
-      Logger.error(`An error occurred while making a page request: ${e}`);
-    }
-    */
   }
+  */
   
   static getElement({
     page,
@@ -263,6 +133,24 @@ export default class Scraper {
       });
   }
 }
+
+const getPageWithCookie = (cookie) => {
+  return async (uri, qs = {}) => {
+    const options = {
+      searchParams: qs,
+      headers: {
+        cookie: cookie,
+      },
+    };
+
+    try {
+      const response = await hooman.get(uri, options);
+      return cheerio.load(response.body);
+    } catch (error) {
+      Logger.error(`An error occurred while making a page request: ${e}`);
+    }
+  };
+};
 
 function tableToJSON({
   page,
