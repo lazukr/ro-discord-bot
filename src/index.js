@@ -121,10 +121,10 @@ class RagnarokBot {
     }
     await this.loginWrap(this.config.discordToken)    
       .then(res => {
-        console.log(`Logged in successfully: ${res}`);
+        console.log(`Discord Client started in successfully: ${res}`);
       })
       .catch(err => {
-        console.log(`Login error: ${err}`);
+        console.log(`Discord Client error: ${err}`);
         console.log(`Retrying...`);
         return this.login();
       });
@@ -159,7 +159,6 @@ class RagnarokBot {
     await this.login();
     this.replyChannel = this.client.channels.get(this.config.replyChannel);
     this.startScheduler();
-    await sc.login();
     this.replyChannel.send(`Bear is ready!`);
     this.checkPopService();
   }
