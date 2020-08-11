@@ -145,6 +145,19 @@ const getPageWithCookie = (cookie) => {
 
     try {
       const response = await hooman.get(uri, options);
+      const page = cheerio.load(response.body);
+      const loginBtn = Scraper.getElement({
+        page: page,
+        selector: LOGIN_BUTTON,
+        index: 1,
+      });
+
+      if (loginBtn === 'Log In') {
+        const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
+        adminChannel.send(`<@${this.bot.admin.id}> Login Session Expired! Please Relog!`);
+        Scraper.getPage = null;
+      }
+
       return cheerio.load(response.body);
     } catch (error) {
       Logger.error(`An error occurred while making a page request: ${e}`);

@@ -33,6 +33,12 @@ export default class NovaROUtils {
       name: name,
     };
 
+    if (!Scraper.getPage) {
+      return {
+        error: MarketErrors.NO_LOGIN,
+      }
+    }
+
     const page = await Scraper.getPage(URL, qs);
     const search = Scraper.getElement({
       page: page,
@@ -64,6 +70,12 @@ export default class NovaROUtils {
       id: id,
     };
     
+    if (!Scraper.getPage) {
+      return {
+        error: MarketErrors.NO_LOGIN,
+      }
+    }
+
     // get html page
     const page = await Scraper.getPage(URL, qs);
     
@@ -132,7 +144,7 @@ export default class NovaROUtils {
       id: id,
     };
 
-    if (!Scraper.login()) {
+    if (!Scraper.getPage) {
       return {
         error: MarketErrors.NO_LOGIN,
       }
