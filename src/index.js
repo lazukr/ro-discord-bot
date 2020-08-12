@@ -188,7 +188,7 @@ class RagnarokBot {
 
     this.client.on('error', async (err) => {
       this.logger.error(`Bear encountered an error. ${err.name}: ${err.message}`);
-      this.replyChannel.send(`Bear encountered an error: ${err.name} - ${err.message}`); 
+      this.replyChannel.send(`<@${this.config.ownerid}> Bear encountered an error: ${err.name} - ${err.message}`); 
       this.logger.info("attempting to restart bot...");
       this.scheduler.cancelAllJobs();
       this.start();
