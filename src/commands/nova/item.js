@@ -1,5 +1,5 @@
 const logger = require('logger.js')("Nova Command module: Item");
-
+const notifier = require('notifier');
 const nvro = require('nova-market-commons');
 const pp = require('pretty-print');
 
@@ -79,15 +79,17 @@ async function doItemId(message, itemId) {
 async function getItemInfo(message, itemID) {
   logger.info("item");
   itemId = parseInt(itemID);
-  const { info, description, drops, icon, image, url, preview } = await nvro.getItemData(itemId);
+  const { info, description, drops, icon, image, url, preview, error } = await nvro.getItemData(itemId);
   
+  if (error) {
+    message.channel.send(`Bot not logged in. Cannot query.`);
+    notifier.send(`Bot not logged in. Please check.`);
+    return;
+  };
+
   const itemInfo = info.contents[0];
   const descriptionInfo = description.contents[0]["Item Description"];
   const dropsInfo = drops.contents; 
-  
-  console.log(itemInfo);
-  console.log(dropsInfo); 
-  console.log(descriptionInfo);
   
   const fullName = `${itemInfo["Item ID"]} - ${itemInfo.Name}`;
   const npcSell = `$${itemInfo["NPC Sell Price"]}z`;

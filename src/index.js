@@ -9,6 +9,7 @@ const readdir = util.promisify(fs.readdir);
 const CONFIG = require('./config.json');
 const LOGGER = require('logger.js');
 const Scheduler = require('task-scheduler.js');
+const notifier = require('notifier');
 // bot constants
 const LIVE_STORAGE = 'src/liveSchedulerDB';
 const POP_CHECK = 2000;
@@ -158,6 +159,7 @@ class RagnarokBot {
     this.logger.info('Starting ro-discord-bot...');
     await this.login();
     this.replyChannel = this.client.channels.get(this.config.replyChannel);
+    notifier.set(this.replyChannel, this.config.ownerid);
     this.startScheduler();
     this.replyChannel.send(`Bear is ready!`);
     this.checkPopService();
@@ -187,8 +189,8 @@ class RagnarokBot {
     });
 
     this.client.on('error', async (err) => {
-      this.logger.error(`Bear encountered an error. ${err.name}: ${err.message}`);
-      this.replyChannel.send(`<@${this.config.ownerid}> Bear encountered an error: ${err.name} - ${err.message}`); 
+      this.logger.error(`Bear encountered an error. ${err}`);
+      this.replyChannel.send(`<@${this.config.ownerid}>. Bear encountered an error: ${err}`); 
       this.logger.info("attempting to restart bot...");
       this.scheduler.cancelAllJobs();
       this.start();
