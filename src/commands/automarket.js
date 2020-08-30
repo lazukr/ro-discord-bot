@@ -14,9 +14,10 @@ export default class NovaAutoMarket extends Command {
       name: "automarket",
       description: "Gets market information of a particular item directly from Nova RO's website on a regular basis. When results exist, the bot will notify the user.\n\* Use subcommand **list** to list out all your automarket.\n\* Use subcommand **remove** to remove an entry from your automarket based on the id from the list. You can provide a list of comma separated ids.\n\* Use subcommand **clear** to remove ALL entries from your automarket.",
       usage: `${bot.prefix}automarket <item id> [, <refine>] [, <price>] [, <additional properties>, ...].\n\n` +
-      `${bot.prefix}automarket ${bot.subprefix}list \n\n` +
-      `${bot.prefix}automarket ${bot.subprefix}remove <entry id | item id> [, <entry id | item id>, ...].\n\n  If duplicates are found, they will be listed and will require entry id in order to delete.\n\n` +
-      `${bot.prefix}automarket ${bot.subprefix}clear`,
+      `${bot.prefix}automarket ${bot.subprefix}list [#]\n > If you append a number, it will return the result for that page.\n\n` +
+      `${bot.prefix}automarket ${bot.subprefix}remove <entry id | item id> [, <entry id | item id>, ...].\n > If duplicates are found, they will be listed and will require entry id in order to delete.\n\n` +
+      `${bot.prefix}automarket ${bot.subprefix}clear\n\n` +
+      `${bot.prefix}automarket ${bot.subprefix}all\n > Processes all your queries immediately and return the results.`,
       aliases: ["am"],
       category: "Nova",
       subCommands: ["list", "clear", "remove", "session", "all"],
