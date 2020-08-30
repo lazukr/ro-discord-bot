@@ -111,6 +111,7 @@ class Tabulator {
     return this.keys.reduce((acc, cur) => {
       acc[cur] = Math.max(header[cur].length,
         ...(contents.map(row => {
+        console.log(row[cur]);
         return row[cur].length;
         })));
       return acc;

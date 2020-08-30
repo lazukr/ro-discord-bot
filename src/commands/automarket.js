@@ -133,7 +133,12 @@ export default class NovaAutoMarket extends Command {
 
   // lists
   async list(message, args, filterids = []) {
-    Logger.log(`Listing automarket for ${message.author.username}(${message.author.id})`);
+
+    const page = !args.length ? 0 
+      : !parseInt(args[0]) ? 0
+      : parseInt(args[0]);
+
+    Logger.log(`Listing automarket for ${message.author.username}(${message.author.id}) on page ${page}`);
     const list = await this.bot.scheduler.list({
       command: MARKET,
       owner: message.author.id,
@@ -186,6 +191,7 @@ export default class NovaAutoMarket extends Command {
       table: dt, 
       name: null,
       suppressEntryText: filterids.length ? true : false,
+      page: page + 1,
     });
 
     Logger.log(reply);
