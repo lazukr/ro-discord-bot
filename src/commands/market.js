@@ -25,8 +25,12 @@ export default class NovaMarket extends Command {
     });
   }
 
-  async run(message, args, silent = false) {
+  async run(message, args, params = {
+    silent: false,
+    name: null,
+  }) {
 
+    const { silent, name } = params;
     // reject empty messages
     if (!args.length) {
       const reply = `Please specify the name or id of an item to check market.`; 
@@ -85,6 +89,7 @@ export default class NovaMarket extends Command {
     const id = args.shift(); 
     const filters = getFilters(args);
     const { reply, result } = await getMarket({
+      name: name,
       id: id,
       filters: filters,
     });

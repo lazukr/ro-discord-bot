@@ -48,7 +48,8 @@ export default class Scheduler {
 
     reminderEntries.forEach(rm => {
       const { channelid, owner, message, _id, } = rm;
-      Logger.log(`id=${_id} owner=${owner} channelid=${channelid} message=${message}`);
+      const author = this.bot.client.users.get(owner);
+      Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} message=${message}`);
     });
 
     Logger.log("Automarkets");
@@ -57,8 +58,9 @@ export default class Scheduler {
     });
     
     automarketEntries.forEach(am => {
-      const { channelid, owner, args, _id, itemid, sleepUntil, creationDateTime } = am;
-      Logger.log(`id=${_id} owner=${owner} channelid=${channelid} itemid=${itemid} args=${args} creationDateTime=${creationDateTime} sleepUntil=${sleepUntil}`);
+      const { channelid, owner, args, _id, itemid, creationDateTime, name } = am;
+      const author = this.bot.client.users.get(owner);
+      Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} item=${name}(${itemid}) args=${args} creationDateTime=${creationDateTime}`);
     });
 
     /*
@@ -232,17 +234,21 @@ export default class Scheduler {
             itemid,
             name,
           } = entry;
-
-          Logger.log(`Processing id=${_id} owner=${owner} itemid=${itemid} args=${args}`);
           const message = {
             channel: this.bot.client.channels.get(channelid),
             author: this.bot.client.users.get(owner),
           };
+          Logger.log(`Processing id=${_id} owner=${message.author.tag}(${owner}) itemid=${itemid} args=${args}`);
+
           const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
-          const marketResult = await cmd.run(message, originalArgs, true);
+          const marketResult = await cmd.run(message, originalArgs, {
+            silent: true,
+            name: name,
+          });
 
           if (result != marketResult.reply) {
-            Logger.log(`There were changes for ${_id}: ${owner} - ${args}`);
+            Logger.log(`There were changes for ${_id}: ${message.author.tag}(${owner}) - ${args}`);
+            Logger.log(marketResult.reply);
             await this.update(_id, {
               result: marketResult.reply,
               name: name || marketResult.name,
@@ -260,7 +266,7 @@ export default class Scheduler {
           if (inputOwner) {
             res(marketResult);
           }
-          Logger.log(`No changes for ${_id}: ${owner} - ${args}`);
+          Logger.log(`No changes for ${_id}: ${message.author.tag}(${owner}) - ${args}`);
         }, 125 + 250 * i);
       });
     }));

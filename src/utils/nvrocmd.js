@@ -45,11 +45,16 @@ export async function getItem(itemId) {
 };
 
 export async function getMarket({
+  name,
   id,
   filters,
 }) {
   Logger.log(`Getting market info on item: ${id}. With filters: ${JSON.stringify(filters)}`);
   const table = await Nova.getMarketData(id, filters);
+
+  if (name) {
+    table.name = `${id} - ${name}`;
+  }
   
   if (table.error === MarketErrors.NO_LOGIN) {
     const reply = `\nBot was unable to login to Nova. A separate message was sent to them and they will fix the issue ASAP.`;
