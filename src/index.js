@@ -179,9 +179,9 @@ class RagnarokBot {
   async loadListeners() {
     this.logger.info(`Starting listeners...`);
     this.client.on('disconnect', dis => {
-      this.logger.info(`Disconnected: ${dis}`);
+      this.logger.info(`Disconnected: ${JSON.stringify(dis)}`);
       this.scheduler.cancelAllJobs();
-      this.replyChannel.send(`Bear got disconnected :(`);
+      this.replyChannel.send(`Bear got disconnected :(. ${JSON.stringify(dis)}`);
     });
 
     this.client.on('reconnecting', rec => {
@@ -189,8 +189,8 @@ class RagnarokBot {
     });
 
     this.client.on('error', async (err) => {
-      this.logger.error(`Bear encountered an error. ${err}`);
-      this.replyChannel.send(`<@${this.config.ownerid}>. Bear encountered an error: ${err}`); 
+      this.logger.error(`Bear encountered an error. ${JSON.stringify(err)}`);
+      this.replyChannel.send(`<@${this.config.ownerid}>. Bear encountered an error: ${JSON.stringify(err)}`); 
       this.logger.info("attempting to restart bot...");
       this.scheduler.cancelAllJobs();
       this.start();
