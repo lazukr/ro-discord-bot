@@ -153,14 +153,16 @@ const getPageWithCookie = (cookie) => {
       }).attribs.value;
 
       if (loginBtn === 'Log In') {
-        const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-        await adminChannel.send(`<@${this.bot.admin.id}> Login Session Expired! Please Relog!`);
+        const adminChannel = Scraper.bot.client.channels.get(this.bot.admin.channel);
+        await adminChannel.send(`<@${Scraper.bot.admin.id}> Login Session Expired! Please Relog!`);
         Scraper.getPage = null;
       }
 
       return cheerio.load(response.body);
     } catch (error) {
       Logger.error(`An error occurred while making a page request: ${error}`);
+      const adminChannel = Scraper.bot.client.channels.get(this.bot.admin.channel);
+      await adminChannel.send(`<@${Scraper.bot.admin.id}> An error occurred while making a page request: ${error}`);
     }
   };
 };
