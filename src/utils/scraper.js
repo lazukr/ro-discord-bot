@@ -49,8 +49,8 @@ export default class Scraper {
       return 1;
       
     } catch (err) {
-      const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-      adminChannel.send(`<@${this.bot.admin.id}> Something was wrong with the login process. Please check! ${err}`);
+      const adminChannel = Scraper.bot.client.channels.get(Scraper.bot.admin.channel);
+      adminChannel.send(`<@${Scraper.bot.admin.id}> Something was wrong with the login process. Please check! ${err}`);
       return 0;
     }
   }
