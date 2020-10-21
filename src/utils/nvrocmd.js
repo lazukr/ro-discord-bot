@@ -49,7 +49,8 @@ export async function getMarket({
   id,
   filters,
 }) {
-  Logger.log(`Getting market info on item: ${id}. With filters: ${JSON.stringify(filters)}`);
+  const {PRICE, ADDPROPS, REFINE } = filters;
+  Logger.log(`GETTING ${id.toString().padStart(5, '0')} $: ${PRICE} AP: ${ADDPROPS} RF: ${REFINE}`);
   const table = await Nova.getMarketData(id, filters);
 
   if (name) {

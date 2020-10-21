@@ -15,7 +15,7 @@ export const TABLE_TYPE = Object.freeze({
   VEND: 4,
 });
 const LOGIN_BUTTON = 'input[type=submit]';
-const LINK = 'https://novaragnarok.com';
+const LINK = 'https://www.novaragnarok.com';
 const VALID_COOKIE_TEST = 'fluxSessionData';
 // this function handles getting pages from websites.
 

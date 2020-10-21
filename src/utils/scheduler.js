@@ -238,7 +238,7 @@ export default class Scheduler {
             channel: this.bot.client.channels.get(channelid),
             author: this.bot.client.users.get(owner),
           };
-          Logger.log(`Processing id=${_id} owner=${message.author.tag}(${owner}) itemid=${itemid} args=${args}`);
+          Logger.log(`DOING ${_id} ${owner} ${itemid.toString().padStart(5, '0')}`);
 
           const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
           const marketResult = await cmd.run(message, originalArgs, {
@@ -247,7 +247,7 @@ export default class Scheduler {
           });
 
           if (result != marketResult.reply) {
-            Logger.log(`There were changes for ${_id}: ${message.author.tag}(${owner}) - ${args}`);
+            Logger.log(`Changes for ${_id}: ${message.author.tag}(${owner}) - ${args}`);
             Logger.log(marketResult.reply);
             await this.update(_id, {
               result: marketResult.reply,
@@ -266,7 +266,7 @@ export default class Scheduler {
           if (inputOwner) {
             res(marketResult);
           }
-          Logger.log(`No changes for ${_id}: ${message.author.tag}(${owner}) - ${args}`);
+          //Logger.log(`No changes for ${_id}: ${message.author.tag}(${owner}) - ${args}`);
         }, 125 + 250 * i);
       });
     }));

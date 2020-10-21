@@ -109,9 +109,10 @@ class Tabulator {
   // figure out the widths of each column
   _getColumnWidths(header, contents) {
     return this.keys.reduce((acc, cur) => {
+      console.log(contents.map(i => i[cur]).join(','));
       acc[cur] = Math.max(header[cur].length,
         ...(contents.map(row => {
-        console.log(row[cur]);
+        //console.log(row[cur]);
         return row[cur].length;
         })));
       return acc;
