@@ -48,7 +48,8 @@ export default class Scheduler {
 
     reminderEntries.forEach(rm => {
       const { channelid, owner, message, _id, } = rm;
-      const author = this.bot.client.users.get(owner);
+      
+      const author = this.bot.client.fetchUser(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} message=${message}`);
     });
 
@@ -59,7 +60,7 @@ export default class Scheduler {
     
     automarketEntries.forEach(am => {
       const { channelid, owner, args, _id, itemid, creationDateTime, name } = am;
-      const author = this.bot.client.users.get(owner);
+      const author = this.bot.client.fetchUser(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} item=${name}(${itemid}) args=${args} creationDateTime=${creationDateTime}`);
     });
 
