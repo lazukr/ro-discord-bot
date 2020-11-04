@@ -22,8 +22,8 @@ export const MarketErrors = Object.freeze({
   NO_ERRORS: 0,
   NO_RESULT: 1,
   NO_LOGIN: 2,
+  NO_PAGE: 3,
 });
-
 
 export default class NovaROUtils {
   static async getSearchData(name, pagenum) {
@@ -40,6 +40,13 @@ export default class NovaROUtils {
     }
 
     const page = await Scraper.getPage(URL, qs);
+    
+    if (!page) {
+      return {
+        error: MarketErrors.NO_PAGE,
+      };
+    }
+
     const search = Scraper.getElement({
       page: page,
       selector: ITEM_SEARCH_TABLE,
@@ -78,6 +85,12 @@ export default class NovaROUtils {
 
     // get html page
     const page = await Scraper.getPage(URL, qs);
+
+    if (!page) {
+      return {
+        error: MarketErrors.NO_PAGE,
+      };
+    }
     
     // get tables
     const tables = Scraper.getElement({
@@ -147,10 +160,17 @@ export default class NovaROUtils {
     if (!Scraper.getPage) {
       return {
         error: MarketErrors.NO_LOGIN,
-      }
+      };
     }
 
     const page = await Scraper.getPage(URL, qs);
+
+    if (!page) {
+      return {
+        error: MarketErrors.NO_PAGE,
+      };
+    }
+
     const market = Scraper.getElement({
       page: page,
       selector: ITEM_SEARCH_TABLE,

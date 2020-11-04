@@ -168,7 +168,8 @@ class Tabulator {
   // returns a string that contains the table of the results
   get(page = 1) {
     // count from 0
-    page = Math.min(page - 1, this.pages.length - 1);
+    page = page === 0 ? 0 : page - 1;
+    page = Math.min(page, this.pages.length - 1);
     let reply = `\`\`\`${HIGHLIGHT}\n` +
       `${this.name ? this.name + '\n\n' : ""}` +
       `${this.header.join('\n')}\n` +

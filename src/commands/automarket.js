@@ -26,6 +26,9 @@ export default class NovaAutoMarket extends Command {
 
   async run(message, args) {
     
+
+
+
     // reject empty messages
     if (!args.length) {
       const reply = `Please specify the id of an item to queue automarket.`;
@@ -54,6 +57,14 @@ export default class NovaAutoMarket extends Command {
       // run the subcommand
       await super.runSubCommand(subCommand, message, args);
       return subCommand;
+    }
+
+    if (!Scraper.getPage) {
+      const reply = `Not logged in. can't set automarkets. Devs notified.`;
+      ////const adminChannel = await this.bot.client.channels.fetch(this.bot.admin.channel);
+      this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
+      message.channel.send(reply);
+      return reply;
     }
 
     const list = await this.bot.scheduler.list({
@@ -192,7 +203,7 @@ export default class NovaAutoMarket extends Command {
       table: dt, 
       name: null,
       suppressEntryText: filterids.length ? true : false,
-      page: page + 1,
+      page: page,
     });
 
     Logger.log(reply);

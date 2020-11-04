@@ -264,8 +264,7 @@ export default class Reminder extends EventEmitter {
         const { channelid, owner, message } = params;
         const notify = message.match(notifyRegex);
         const notifyMember = message.match(memberRegex);
-        
-        const channel = await this.bot.client.channels.get(channelid);
+        const channel = await this.bot.client.channels.fetch(channelid);
         await channel.send(`<@${owner}>! ${this.bot.name} has a message for you.\n> ${message}`);
     }
 }

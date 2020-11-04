@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import Scraper from './utils/scraper';
 import Logger from './utils/logger';
 import Scheduler from './utils/scheduler';
+import NvroCommands from './utils/nvrocmd';
 
 const readdir = util.promisify(fs.readdir);
 
@@ -32,6 +33,7 @@ export default class Bot {
     this.scheduler = new Scheduler(this, dburl);
     this.admin = admin;
     Scraper.bot = this;
+    NvroCommands.bot = this;
   }
 
   async loadEvents() {
@@ -101,6 +103,7 @@ export default class Bot {
     await this.loadCommands();
     this.attachListeners();
     await this.client.login(this.token);
+    this.adminChannel = await this.client.channels.fetch(this.admin.channel);
     await this.scheduler.init();
   }
 };

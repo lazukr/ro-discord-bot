@@ -2,7 +2,7 @@ import Logger from "../utils/logger";
 import Command from "../utils/command";
 import Nova, { MARKET_COLUMNS } from "../utils/nvro";
 import PrettyPrinter from "../utils/prettyPrinter";
-import { getSearch, getMarket } from "../utils/nvrocmd";
+import NvroCommand from "../utils/nvrocmd";
 import Scraper from "../utils/scraper";
 
 export const MARKETQUEUE = "marketqueue";
@@ -52,7 +52,8 @@ export default class NovaMarket extends Command {
       }
       */
 
-      await message.channel.send(`Could not query market as the bot is not logged in. The developer has been notified.`);
+      await message.channel.send(`Not logged in, can't get results. Devs notified.`);
+      this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
       return;
     }
 
@@ -68,7 +69,7 @@ export default class NovaMarket extends Command {
       Logger.log(`First argument is not a number. Assuming name.`);
       const name = args.shift();
       const filters = getFilters(args);
-      const { reply, result } = await getSearch({
+      const { reply, result } = await NvroCommand.getSearch({
         params: name,
         pagenum: filters.PAGE,
       });
@@ -88,7 +89,7 @@ export default class NovaMarket extends Command {
 
     const id = args.shift(); 
     const filters = getFilters(args);
-    const { reply, result } = await getMarket({
+    const { reply, result } = await NvroCommand.getMarket({
       name: name,
       id: id,
       filters: filters,

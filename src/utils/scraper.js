@@ -49,8 +49,8 @@ export default class Scraper {
       return 1;
       
     } catch (err) {
-      const adminChannel = Scraper.bot.client.channels.get(Scraper.bot.admin.channel);
-      adminChannel.send(`<@${Scraper.bot.admin.id}> Something was wrong with the login process. Please check! ${err}`);
+      //const adminChannel = Scraper.bot.client.channels.get(Scraper.bot.admin.channel);
+      this.bot.adminChannel.send(`<@${Scraper.bot.admin.id}> Something was wrong with the login process. Please check! ${err}`);
       return 0;
     }
   }
@@ -153,16 +153,16 @@ const getPageWithCookie = (cookie) => {
       }).attribs.value;
 
       if (loginBtn === 'Log In') {
-        const adminChannel = Scraper.bot.client.channels.get(Scraper.bot.admin.channel);
-        await adminChannel.send(`<@${Scraper.bot.admin.id}> Login Session Expired! Please Relog!`);
+        //const adminChannel = Scraper.bot.client.channels.get(Scraper.bot.admin.channel);
+        await Scraper.bot.adminChannel.send(`<@${Scraper.bot.admin.id}> Login Session Expired! Please Relog!`);
         Scraper.getPage = null;
       }
 
       return cheerio.load(response.body);
     } catch (error) {
       Logger.error(`An error occurred while making a page request: ${error}`);
-      const adminChannel = Scraper.bot.client.channels.get(Scraper.bot.admin.channel);
-      await adminChannel.send(`<@${Scraper.bot.admin.id}> An error occurred while making a page request: ${error}`);
+      //const adminChannel = Scraper.bot.client.channels.get(Scraper.bot.admin.channel);
+      await Scraper.bot.adminChannel.send(`<@${Scraper.bot.admin.id}> An error occurred while making a page request: ${error}`);
     }
   };
 };

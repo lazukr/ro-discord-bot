@@ -33,8 +33,8 @@ export default class Scheduler {
     schedule.scheduleJob(`*/1 * * * *`, async () => {
       if (!Scraper.getPage) {
         Logger.warn(`Bot is not logged in.`);
-        const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-        adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
+        ////const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
+        this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
         return;
       }
 
@@ -46,10 +46,9 @@ export default class Scheduler {
       command: REMIND,
     });
 
-    reminderEntries.forEach(rm => {
+    reminderEntries.forEach(async (rm) => {
       const { channelid, owner, message, _id, } = rm;
-      
-      const author = this.bot.client.fetchUser(owner);
+      const author = await this.bot.client.users.fetch(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} message=${message}`);
     });
 
@@ -58,9 +57,9 @@ export default class Scheduler {
       command: MARKET,
     });
     
-    automarketEntries.forEach(am => {
+    automarketEntries.forEach(async (am) => {
       const { channelid, owner, args, _id, itemid, creationDateTime, name } = am;
-      const author = this.bot.client.fetchUser(owner);
+      const author = await this.bot.client.users.fetch(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} item=${name}(${itemid}) args=${args} creationDateTime=${creationDateTime}`);
     });
 
@@ -236,8 +235,8 @@ export default class Scheduler {
             name,
           } = entry;
           const message = {
-            channel: this.bot.client.channels.get(channelid),
-            author: this.bot.client.users.get(owner),
+            channel: await this.bot.client.channels.fetch(channelid),
+            author: await this.bot.client.users.fetch(owner),
           };
           Logger.log(`DOING ${_id} ${owner} ${itemid.toString().padStart(5, '0')}`);
 

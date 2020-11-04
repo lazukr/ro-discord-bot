@@ -2,7 +2,7 @@ import Logger from '../utils/logger';
 import Command from '../utils/command';
 import Nova from '../utils/nvro';
 import PrettyPrinter from '../utils/prettyPrinter';
-import { getSearch, getItem } from '../utils/nvrocmd';
+import NvroCommand from '../utils/nvrocmd';
 
 
 export default class NovaItemInfo extends Command {
@@ -33,7 +33,7 @@ export default class NovaItemInfo extends Command {
       Logger.log(`First argument is not a number. Assuming name.`);
       const name = args.shift();
       const pagenum = parseInt(args.shift()) || undefined;
-      const { reply } = await getSearch({
+      const { reply } = await NvroCommand.getSearch({
         params: name,
         pagenum: pagenum,
       });
@@ -45,7 +45,12 @@ export default class NovaItemInfo extends Command {
       return reply;
     } 
     
-    const reply = await getItem(args[0]);
+    const reply = await NvroCommand.getItem(args[0]);
+    if (reply.reply) {
+      await message.channel.send(reply.reply);
+      return reply.reply;
+    }
+    
     await message.channel.send(reply);
     return reply;
   }
