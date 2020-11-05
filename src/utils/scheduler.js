@@ -46,22 +46,29 @@ export default class Scheduler {
       command: REMIND,
     });
 
-    reminderEntries.forEach(async (rm) => {
+    Logger.log(`# of: ${reminderEntries.length}`);
+
+    for (const rm of reminderEntries) {
       const { channelid, owner, message, _id, } = rm;
       const author = await this.bot.client.users.fetch(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} message=${message}`);
-    });
+    };
 
+    Logger.log(`End of reading Reminders`);
     Logger.log("Automarkets");
     const automarketEntries = await this.list({
       command: MARKET,
     });
+
+    Logger.log(`# of: ${automarketEntries.length}`);
     
-    automarketEntries.forEach(async (am) => {
+    for (const am of automarketEntries) {
       const { channelid, owner, args, _id, itemid, creationDateTime, name } = am;
       const author = await this.bot.client.users.fetch(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} item=${name}(${itemid}) args=${args} creationDateTime=${creationDateTime}`);
-    });
+    };
+
+    Logger.log(`End of reading Automarkets`);
 
     /*
     Logger.log("Market Queues");
