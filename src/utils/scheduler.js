@@ -50,7 +50,7 @@ export default class Scheduler {
 
     for (const rm of reminderEntries) {
       const { channelid, owner, message, _id, } = rm;
-      const author = await this.bot.client.users.cache.get(owner);
+      const author = await this.bot.client.users.fetch(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} message=${message}`);
     };
 
@@ -64,7 +64,7 @@ export default class Scheduler {
     
     for (const am of automarketEntries) {
       const { channelid, owner, args, _id, itemid, creationDateTime, name } = am;
-      const author = await this.bot.client.users.cache.get(owner);
+      const author = await this.bot.client.users.fetch(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} item=${name}(${itemid}) args=${args} creationDateTime=${creationDateTime}`);
     };
 
@@ -176,8 +176,8 @@ export default class Scheduler {
             name,
           } = entry;
           const message = {
-            channel: await this.bot.client.channels.cache.get(channelid),
-            author: await this.bot.client.users.cache.get(owner),
+            channel: await this.bot.client.channels.fetch(channelid),
+            author: await this.bot.client.users.fetch(owner),
           };
           Logger.log(`DOING ${_id} ${owner} ${itemid.toString().padStart(5, '0')}`);
 
