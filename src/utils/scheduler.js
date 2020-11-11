@@ -50,7 +50,7 @@ export default class Scheduler {
 
     for (const rm of reminderEntries) {
       const { channelid, owner, message, _id, } = rm;
-      const author = await this.bot.client.users.fetch(owner);
+      const author = await this.bot.client.users.cache.get(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} message=${message}`);
     };
 
@@ -64,78 +64,12 @@ export default class Scheduler {
     
     for (const am of automarketEntries) {
       const { channelid, owner, args, _id, itemid, creationDateTime, name } = am;
-      const author = await this.bot.client.users.fetch(owner);
+      const author = await this.bot.client.users.cache.get(owner);
       Logger.log(`id=${_id} owner=${author.tag}(${owner}) channelid=${channelid} item=${name}(${itemid}) args=${args} creationDateTime=${creationDateTime}`);
     };
 
     Logger.log(`End of reading Automarkets`);
-
-    /*
-    Logger.log("Market Queues");
-    const automarketqueueEntries = await this.list({
-      command: "marketqueue",
-    });
-    automarketqueueEntries.forEach(amq => {
-      Logger.log(JSON.stringify(amq));
-    }); 
-    */ 
   }
-
-  /*
-  async processQueues() {
-    const marketQueueList = await this.list({
-      command: MARKETQUEUE,
-    });
-
-    const marketCmd = this.bot.commands.get("market");
-    await Promise.all(marketQueueList.map(async (entry) => {
-      Logger.log(`Processing market queues ${JSON.stringify(entry)}`);
-      const { channelid, owner, args } = entry;
-      const message = {
-        channel: this.bot.client.channels.get(channelid),
-        author: this.bot.client.users.get(owner),
-      };
-      const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
-      await marketCmd.run(message, originalArgs);
-    }));
-
-    await this.clear({
-      command: MARKETQUEUE,
-    });
-
-    const marketList = await this.list({
-      command: MARKET,
-    });
-
-    const noNames = marketList.filter((entry) => !entry.name);
-
-    await Promise.all(noNames.map(async (entry) => {
-      Logger.log(`Processing ${JSON.stringify(entry)}`);
-      const {_id, itemid, name} = entry;
-      const dt = await Nova.getMarketData(itemid);
-      await this.update(_id, {$set: {
-        name: dt.name,
-      }});
-    }));
-  }
-  */
-
-  /*
-  async _processAutomarkets(list) {
-    const cmd = this.bot.commands.get(MARKET);
-    return await Promise.all(list.map(async (entry) => {
-      
-      const { channelid, owner, args, _id, itemid, } = entry;
-      Logger.log(`Processing id=${_id} owner=${owner} itemid=${itemid} args=${args}`);
-      const message = {
-        channel: this.bot.client.channels.get(channelid),
-        author: this.bot.client.users.get(owner),
-      };
-      const originalArgs = args ? JSON.parse(args).join(", ").split(" ") : [];
-      return await cmd.run(message, originalArgs, true);
-    }));
-  }
-  */
 
   async loadReminder(reminder) {
     const id = reminder._id;
@@ -242,8 +176,8 @@ export default class Scheduler {
             name,
           } = entry;
           const message = {
-            channel: await this.bot.client.channels.fetch(channelid),
-            author: await this.bot.client.users.fetch(owner),
+            channel: await this.bot.client.channels.cache.get(channelid),
+            author: await this.bot.client.users.cache.get(owner),
           };
           Logger.log(`DOING ${_id} ${owner} ${itemid.toString().padStart(5, '0')}`);
 
@@ -252,6 +186,10 @@ export default class Scheduler {
             silent: true,
             name: name,
           });
+
+          if (!marketResult.result) {
+            return;
+          }
 
           if (result != marketResult.reply) {
             Logger.log(`Changes for ${_id}: ${message.author.tag}(${owner}) - ${args}`);

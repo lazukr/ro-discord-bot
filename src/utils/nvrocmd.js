@@ -17,7 +17,7 @@ export default class NvroCommands {
     
     if (search.error === MarketErrors.NO_LOGIN) {
       const reply = "Not logged in, can't get results. Devs notified.";
-      //const adminChannel = await this.bot.client.channels.fetch(this.bot.admin.channel);
+      //const adminChannel = this.bot.client.channels.fetch(this.bot.admin.channel);
       this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
       Logger.warn(reply);
       return {
@@ -28,7 +28,7 @@ export default class NvroCommands {
 
     if (search.error === MarketErrors.NO_PAGE) {
       const reply = "Something went wrong. Try again. Devs notified.";
-      //const adminChannel = await this.bot.client.channels.fetch(this.bot.admin.channel);
+      //const adminChannel = this.bot.client.channels.fetch(this.bot.admin.channel);
       this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot could not get page. Please check!`);
       Logger.warn(reply);
       return {
@@ -67,7 +67,7 @@ export default class NvroCommands {
     
     if (table.error === MarketErrors.NO_LOGIN) {
       const reply = "Not logged in, can't get results. Devs notified.";
-      //const adminChannel = await this.bot.client.channels.fetch(this.bot.admin.channel);
+      //const adminChannel = this.bot.client.channels.fetch(this.bot.admin.channel);
       this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
       Logger.warn(reply);
       return {
@@ -78,7 +78,7 @@ export default class NvroCommands {
 
     if (table.error === MarketErrors.NO_PAGE) {
       const reply = "Something went wrong. Try again. Devs notified.";
-      //const adminChannel = await this.bot.client.channels.fetch(this.bot.admin.channel);
+      //const adminChannel = this.bot.client.channels.fetch(this.bot.admin.channel);
       this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot could not get page. Please check!`);
       Logger.warn(reply);
       return {
@@ -106,19 +106,18 @@ export default class NvroCommands {
     
     if (table.error === MarketErrors.NO_LOGIN) {
       const reply = `Not Logged in, can't get results. Devs notified.`;
-      //const adminChannel = await this.bot.client.channels.fetch(this.bot.admin.channel);
+      //const adminChannel = this.bot.client.channels.fetch(this.bot.admin.channel);
       this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
       Logger.warn(reply);
-      const result = !couldNotLogin ? 1 : 0;
       return {
         reply: reply,
-        result: result,
+        result: false,
       };
     }
 
     if (table.error === MarketErrors.NO_PAGE) {
       const reply = "Something went wrong. Try again. Devs notified.";
-      //const adminChannel = await this.bot.client.channels.fetch(this.bot.admin.channel);
+      //const adminChannel = this.bot.client.channels.fetch(this.bot.admin.channel);
       this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot could not get page. Please check!`);
       Logger.warn(reply);
       return {
