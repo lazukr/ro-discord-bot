@@ -95,8 +95,9 @@ function getFromLast(message, page, filters) {
 async function getFromLive(message, itemId, page, filters, silent = 0) {
   logger.info("Getting from live...");
   
-  const market = await nvro.getLiveMarketData(itemId);
+  //const market = await nvro.getLiveMarketData(itemId);
 
+  const market = await nvro.getNewMarketData(itemId);
   if (market.error === nvro.ERROR.NO_LOGIN) {
     message.channel.send(`Bot isn't logged in and can't get entry.`);
     return;
@@ -106,10 +107,7 @@ async function getFromLive(message, itemId, page, filters, silent = 0) {
     message.channel.send(`\`\`\`${pp.HIGHLIGHT}\n${market.id} - ${market.name}\n\nNo Results Found :(\n\`\`\``);
     return;
   }
- 
-  market.table.intToStrCols(nvro.HEADERS.QTY);
-  market.table.intToStrCols(nvro.HEADERS.PRICE);
-  market.table.intToStrCols(nvro.HEADERS.REFINE);
+
   const prettyTable = new pp.PrettyTableFactory(market);
 
   LAST_QUERY = prettyTable.id;
