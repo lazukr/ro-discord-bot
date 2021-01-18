@@ -189,6 +189,11 @@ async function addAutomarket(message, bot, args) {
       return;
     }
 
+    if (search.error == nvro.ERROR.NO_LOGIN) {
+      message.channel.send(`\`\`\`${pp.HIGHTLIGHT}\n${search.name}\n\nNot logged in. Could not search.\`\`\``);
+      return;
+    }
+    
     if (search.table.contents.length > 1) {
       args.shift();
       const filters = nvro.getFilters(args);
@@ -209,8 +214,7 @@ async function addAutomarket(message, bot, args) {
     return;
   } else {
     itemID = parseInt(item);
-    const market = await nvro.getLiveMarketData(itemID);
-    item = market.name; 
+    item = await nvro.getItemName(itemID);
   } 
  
   //const market = await nvro.getLiveMarketData(itemIDID);
