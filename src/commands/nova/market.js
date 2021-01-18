@@ -16,7 +16,7 @@ exports.run = async (discordBot, message, args) => {
   args = args.join(' ').split(',');
   args = args.map(i => i.trim());
   
-  console.log(args);
+  //console.log(args);
   
   // No arguments Case
   if (args.length === 0) {
@@ -94,7 +94,7 @@ function getFromLast(message, page, filters) {
 
 async function getFromLive(message, itemId, page, filters, silent = 0) {
   logger.info("Getting from live...");
-  
+
   //const market = await nvro.getLiveMarketData(itemId);
 
   const market = await nvro.getNewMarketData(itemId);
