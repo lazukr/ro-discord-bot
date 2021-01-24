@@ -2,10 +2,9 @@ const rp = require('request-promise').defaults({jar: true});
 import cheerio from 'cheerio';
 import Logger from './logger';
 import config from '../../config.json';
-import sessionConfig from '../../session.json';
-import fs from 'fs';
-import Scheduler from './scheduler';
 import hooman from 'hooman';
+
+import { MARKET_COLUMNS } from './nvro';
 
 export const TABLE_TYPE = Object.freeze({
   DEFAULT: 0,
@@ -17,6 +16,8 @@ export const TABLE_TYPE = Object.freeze({
 const LOGIN_BUTTON = 'input[type=submit]';
 const LINK = 'https://www.novaragnarok.com';
 const VALID_COOKIE_TEST = 'fluxSessionData';
+
+const MARKET_LINK = 'https://www.novaragnarok.com/data/cache/ajax/item_*.json';
 // this function handles getting pages from websites.
 
 export default class Scraper {
@@ -72,6 +73,24 @@ export default class Scraper {
     }
   }
   */
+  static async getItemJSONData(itemID) {
+    try {
+      const link = MARKET_LINK.replace("*", itemID);
+      const { body } = await hooman.get(link, {
+        responseType: 'json',
+      });
+      return body.data;
+    } catch(err) {
+
+      if (err.response.statusCode === 404) {
+        return [];
+      }
+
+      const errorMessage = `An error occurred on JSON request:`;
+      logger.error(`${errorMessage} ${err}`);
+      Scraper.bot.adminChannel.send(`<@${Scraper.bot.admin.id}> ${errorMessage} ${error}`);
+    }
+  }
   
   static getElement({
     page,
@@ -101,7 +120,6 @@ export default class Scraper {
       header[text] = text;
     });
     const contents =  page(rows).find('td').toArray();
-    
     return tableToJSON({
       page: page,
       header: header,
@@ -129,7 +147,7 @@ export default class Scraper {
         return res;
       })
       .catch(err => {
-        logger.error(`An error has occurred on ${DADJOKE_URI}: ${err}`);
+        Logger.error(`An error has occurred on ${DADJOKE_URI}: ${err}`);
       });
   }
 }
@@ -217,7 +235,7 @@ function rowToJSON({
   return rows.reduce((acc, cur, idx) => {
     // market item case
     if (type === TABLE_TYPE.MARKET &&
-        header[keys[idx]] === "Item") {
+      header[keys[idx]] === "Item") {
       const tooltip = page(cur)
         .find('img')
         .data('tooltipContent');
@@ -227,8 +245,7 @@ function rowToJSON({
         .trim();
       const itemID = tooltip.match(/d+/g)[0];
       acc[header[keys[idx]]] = `${itemID} - ${name}`;
-    } 
-    
+    }
     // description case
     else if (type === TABLE_TYPE.DESCRIPTION) {
       acc[header[keys[idx]]] = page(cur)

@@ -35,7 +35,7 @@ export default class Scheduler {
         Logger.warn(`Bot is not logged in.`);
         ////const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
         this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
-        return;
+
       }
 
       await this.processAutomarkets();
@@ -187,16 +187,13 @@ export default class Scheduler {
             name: name,
           });
 
-          if (!marketResult.result) {
-            return;
-          }
-
+          const marketName =  marketResult.name.split('-')[1] ? marketResult.name.split('-')[1].trim() : name;
           if (result != marketResult.reply) {
             Logger.log(`Changes for ${_id}: ${message.author.tag}(${owner}) - ${args}`);
             Logger.log(marketResult.reply);
             await this.update(_id, {
               result: marketResult.reply,
-              name: name || marketResult.name,
+              name: marketName !== name ? marketName : name,
             });
             if (!inputOwner) {
               await message.channel.send(`${message.author.toString()}${marketResult.reply}`);
@@ -207,7 +204,14 @@ export default class Scheduler {
             }
             return;
           }
-
+          
+          if (marketName !== name) {
+            await this.update(_id, {
+              result: marketResult.reply,
+              name: marketName,
+            })
+          }
+        
           if (inputOwner) {
             res(marketResult);
           }

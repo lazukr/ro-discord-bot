@@ -59,14 +59,6 @@ export default class NovaAutoMarket extends Command {
       return subCommand;
     }
 
-    if (!Scraper.getPage) {
-      const reply = `Not logged in. can't set automarkets. Devs notified.`;
-      ////const adminChannel = await this.bot.client.channels.fetch(this.bot.admin.channel);
-      this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
-      message.channel.send(reply);
-      return reply;
-    }
-
     const list = await this.bot.scheduler.list({
       command: MARKET,
       owner: message.author.id,
@@ -97,7 +89,7 @@ export default class NovaAutoMarket extends Command {
     Logger.log(`Queuing automarket query from ${message.author.username}(${message.author.id}) on channel ${message.channel.name}(${message.channel.id}) with arguments: ${args}`);
    
     // grabbing datatable (for name)
-    const datatable = await Nova.getMarketData(args[0]);
+    const datatable = await Nova.getNewMarketData(args[0]);
     args = args ? args : [];
     
     // insert into scheduler
@@ -118,7 +110,7 @@ export default class NovaAutoMarket extends Command {
 
     if (result.result.ok) {
       Logger.log("Successfully queued!");
-      const reply = `Automarket queued for ${datatable.name ? datatable.name : datatable.table.id} with the following filters: ${args.slice(1).join(",")}`;
+      const reply = `Automarket queued for ${datatable.table.id} - ${datatable.name} with the following filters: ${args.slice(1).join(",")}`;
       await message.channel.send(reply);
       return reply;
     }

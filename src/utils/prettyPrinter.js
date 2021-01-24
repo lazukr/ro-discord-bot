@@ -109,7 +109,7 @@ class Tabulator {
   // figure out the widths of each column
   _getColumnWidths(header, contents) {
     return this.keys.reduce((acc, cur) => {
-      console.log(contents.map(i => i[cur]).join(','));
+      //console.log(contents.map(i => i[cur]).join(','));
       acc[cur] = Math.max(header[cur].length,
         ...(contents.map(row => {
         //console.log(row[cur]);
@@ -131,6 +131,7 @@ class Tabulator {
   _pad(table) {
     return table.map(row => {
       return this.keys.reduce((acc, cur) => {
+        //console.log(row[cur]);
         acc[cur] = row[cur].padEnd(this.columnWidths[cur]);
         return acc;
       }, {});

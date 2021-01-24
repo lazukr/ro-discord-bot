@@ -98,10 +98,12 @@ export default class NvroCommands {
   }) {
     const {PRICE, ADDPROPS, REFINE } = filters;
     Logger.log(`GETTING ${id.toString().padStart(5, '0')} $: ${PRICE} AP: ${ADDPROPS} RF: ${REFINE}`);
-    const table = await Nova.getMarketData(id, filters);
+    const table = await Nova.getNewMarketData(id, filters);
 
-    if (name) {
-      table.name = `${id} - ${name}`;
+    //console.log(table.name);
+
+    if (name !== table.name) {
+      table.name = `${id} - ${table.name}`;
     }
     
     if (table.error === MarketErrors.NO_LOGIN) {
@@ -128,5 +130,5 @@ export default class NvroCommands {
     
     const reply = PrettyPrinter.tabulate(table);
     return reply;
-  };
+  }; 
 }

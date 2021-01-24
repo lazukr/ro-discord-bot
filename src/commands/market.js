@@ -37,26 +37,6 @@ export default class NovaMarket extends Command {
       await message.channel.send(reply);
       return "No args";
     }
-
-    if (!Scraper.getPage && !silent) {
-      /*
-      const result = await this.bot.scheduler.insert({
-        channelid: message.channel.id,
-        command: MARKETQUEUE,
-        owner: message.author.id,
-        args: `${JSON.stringify(args)}`,
-      });
-
-      if (!result.result.ok) {
-        Logger.log(`Unable to insert entry: ${result}`);
-      }
-      */
-
-      await message.channel.send(`Not logged in, can't get results. Devs notified.`);
-      this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
-      return;
-    }
-
     // transform arguments so that the array is comma separated
     args = args
       .join(" ")
@@ -89,7 +69,7 @@ export default class NovaMarket extends Command {
 
     const id = args.shift(); 
     const filters = getFilters(args);
-    const { reply, result } = await NvroCommand.getMarket({
+    const { reply, result, name:altName } = await NvroCommand.getMarket({
       name: name,
       id: id,
       filters: filters,
@@ -103,6 +83,7 @@ export default class NovaMarket extends Command {
     return {
       reply: reply,
       result: result,
+      name: altName,
     };
   }
 }

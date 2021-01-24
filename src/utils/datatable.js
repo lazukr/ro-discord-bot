@@ -1,7 +1,8 @@
 import Logger from './logger';
 import Scraper from './scraper';
-import { MARKET_COLUMNS } from './nvro';
-
+import cheerio from 'cheerio';
+import NovaROUtils, { MARKET_COLUMNS } from './nvro';
+import { MARKET } from '../commands/automarket';
 export default class DataTable {
   constructor({
     header,
@@ -74,16 +75,19 @@ export class MarketDataTable extends DataTable {
     this.originalLength = super.length;
     this.filters = config.filters;
     this.id = config.id;
-    this.quantify(MARKET_COLUMNS.PRICE);
-    this.quantify(MARKET_COLUMNS.REFINE);
-    this.quantify(MARKET_COLUMNS.QUANTITY);
+    //this.convertAddProps();
+    //this.convertItem();
+    //this.quantify(MARKET_COLUMNS.PRICE);
+    //this.quantify(MARKET_COLUMNS.REFINE);
+    //this.quantify(MARKET_COLUMNS.QUANTITY);
     this.sort(MARKET_COLUMNS.PRICE);
     this.processPrice();
     this.processRefine();
     this.processAddProps();
+
     this.locationfy();
-    this.shortenHeaders(MARKET_COLUMNS.REFINE, "Rfn");
-    this.shortenHeaders(MARKET_COLUMNS.ADDPROPS, "Add Props");
+    this.shortenHeaders(MARKET_COLUMNS.REFINE, "rfn");
+    this.shortenHeaders(MARKET_COLUMNS.ADDPROPS, "add props");
   }
 
   shortenHeaders(col, name) {
@@ -94,7 +98,7 @@ export class MarketDataTable extends DataTable {
 
   processRefine() {
     if (!this.filters.REFINE ||
-        !this.header.Refine) {
+        !this.header[MARKET_COLUMNS.REFINE]) {
       return;    
     }
 
@@ -107,7 +111,7 @@ export class MarketDataTable extends DataTable {
 
   processPrice() {
     if (!this.filters.PRICE ||
-        !this.header.Price) {
+        !this.header[MARKET_COLUMNS.PRICE]) {
       return;
     }
 
@@ -120,10 +124,10 @@ export class MarketDataTable extends DataTable {
 
   processAddProps() {
     if (!this.filters.ADDPROPS ||
-        !this.header["Additional Properties"]) {
+        !this.header[MARKET_COLUMNS.ADDPROPS]) {
       return;
     }
-   
+
     const addprops = this.filters.ADDPROPS.map(addprop => {
       return addprop.split(',').map(prop => prop.trim());
     });
@@ -164,7 +168,7 @@ export class MarketDataTable extends DataTable {
 
   locationfy() {
     this.contents = this.contents.map(row => {
-      const location = row[MARKET_COLUMNS.LOCATION].split(',');
+      const location = row[MARKET_COLUMNS.LOCATION].trim().split(',');
       row[MARKET_COLUMNS.LOCATION] = location[0] == "nova_vend" ? 
         `@sj ${location[1]} ${location[2]}` :
         `@navi ${location[0]} ${location[1]}/${location[2]}`;
