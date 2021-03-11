@@ -87,7 +87,7 @@ export default class Scraper {
       }
 
       const errorMessage = `An error occurred on JSON request:`;
-      logger.error(`${errorMessage} ${err}`);
+      Logger.error(`${errorMessage} ${err}`);
       Scraper.bot.adminChannel.send(`<@${Scraper.bot.admin.id}> ${errorMessage} ${error}`);
     }
   }
