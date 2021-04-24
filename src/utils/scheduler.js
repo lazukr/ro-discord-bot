@@ -32,9 +32,10 @@ export default class Scheduler {
     // begin the scheduler
     schedule.scheduleJob(`*/1 * * * *`, async () => {
       if (!Scraper.getPage) {
-        Logger.warn(`Bot is not logged in.`);
+        await Scraper.login("");
+        //Logger.warn(`Bot is not logged in.`);
         ////const adminChannel = this.bot.client.channels.get(this.bot.admin.channel);
-        this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
+        //this.bot.adminChannel.send(`<@${this.bot.admin.id}> Bot is not logged in. Please login!`);
 
       }
 
