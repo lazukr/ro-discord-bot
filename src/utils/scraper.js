@@ -41,11 +41,13 @@ export default class Scraper {
 
     try {
       const { request } = await hooman.post(LINK, options);
+      /*
       const cookie = request.options.headers.cookie;
       if (!cookie.includes(VALID_COOKIE_TEST)) {
         return 0;
       }
-      Scraper.getPage = getPageWithCookie(cookie);
+      */
+      Scraper.getPage = getPageWithCookie(null);
       Logger.log('Logged in!');
       this.bot.adminChannel.send(`Logged in!`);
       //this.bot.scheduler.processQueues();
@@ -166,17 +168,21 @@ const getPageWithCookie = (cookie) => {
     try {
       const response = await hooman.get(uri, options);
       const page = cheerio.load(response.body);
+
+      /*
       const loginBtn = Scraper.getElement({
         page: page,
         selector: LOGIN_BUTTON,
         index: 1,
       }).attribs.value;
 
+      
       if (loginBtn === 'Log In') {
         //const adminChannel = Scraper.bot.client.channels.get(Scraper.bot.admin.channel);
         await Scraper.bot.adminChannel.send(`<@${Scraper.bot.admin.id}> Login Session Expired! Please Relog!`);
         Scraper.getPage = null;
       }
+      */
 
       return cheerio.load(response.body);
     } catch (error) {
