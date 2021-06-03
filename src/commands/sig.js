@@ -3,7 +3,7 @@ import Command from '../utils/command';
 import ROChargenPHP from '../utils/rochargenphp';
 
 export const MAX_BACKGROUND = 14;
-export const MAX_POSE = 15;
+export const MAX_POSE = 12;
 
 export default class Signature extends Command {
   constructor(bot) {
