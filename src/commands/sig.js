@@ -2,7 +2,7 @@ import Logger from '../utils/logger';
 import Command from '../utils/command';
 import ROChargenPHP from '../utils/rochargenphp';
 
-export const MAX_BACKGROUND = 10;
+export const MAX_BACKGROUND = 14;
 export const MAX_POSE = 15;
 
 export default class Signature extends Command {
