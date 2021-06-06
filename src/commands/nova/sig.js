@@ -2,7 +2,7 @@ const novaSigLink = 'https://www.novaragnarok.com/ROChargenPHP/newsig/';
 const logger = require('logger.js')("Nova Command module: sig");
 const getCharaLink = require('ro-chargen-php-link.js');
 const POSE_MAX = 12;
-const BG_MAX = 14;
+const BG_MAX = 15;
 const INVALID = -1;
 
 exports.run = async (discordBot, message, args) => {
