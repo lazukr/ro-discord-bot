@@ -46,8 +46,6 @@ export default class Scraper {
         return 0;
       }
       Scraper.getPage = getPageWithCookie(cookie);
-      Logger.log('Logged in!');
-      this.bot.adminChannel.send(`Logged in!`);
       //this.bot.scheduler.processQueues();
       return 1;
       
