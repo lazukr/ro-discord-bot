@@ -82,7 +82,8 @@ export default class Scraper {
       return body.data;
     } catch(err) {
 
-      if (err.response.statusCode === 404) {
+      if (err.response.statusCode === 404 ||
+          err.response.statusCode > 500) {
         return [];
       }
 
