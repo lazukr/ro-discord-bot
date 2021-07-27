@@ -18,8 +18,10 @@ export default async function ROChargenPHP({
   }
   
   const lastArg = args.length > 1 ? args[args.length - 1] : "-/-";
+  
   const params = parse(lastArg);
   const valid = verifyValues(params, max_values);
+  console.log(lastArg, params, valid);
   
   if (valid.first || valid.second) {
     args.pop();
@@ -55,15 +57,15 @@ export function parse(params) {
 
 export function verifyValues({ first, second}, max_values) {
   return {
-    first: !isNaN(first) && between(first, 0, max_values[0]), 
-    second: !isNaN(second) && between(second, 0, max_values[1]), 
+    first: !isNaN(first) && between(first, 1, max_values[0]), 
+    second: !isNaN(second) && between(second, 1, max_values[1]), 
   }
 }
 
 export function getNewArgs(valid, params, max_values) {
   return {
-    first: valid.first ? params.first : getRandomInt(0, max_values[0]),
-    second: valid.second ? params.second : getRandomInt(0, max_values[1]),
+    first: valid.first ? params.first : getRandomInt(1, max_values[0]),
+    second: valid.second ? params.second : getRandomInt(1, max_values[1]),
   }
 }
 
