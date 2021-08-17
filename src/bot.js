@@ -19,6 +19,7 @@ export default class Bot {
     subprefix,
     aminterval,
     admin,
+    mods,
   }) {
     this.aminterval = aminterval;
     this.token = token;
@@ -32,6 +33,7 @@ export default class Bot {
     this.client = new Discord.Client();
     this.scheduler = new Scheduler(this, dburl);
     this.admin = admin;
+    this.mods = mods;
     Scraper.bot = this;
     NvroCommands.bot = this;
   }

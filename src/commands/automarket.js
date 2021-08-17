@@ -20,15 +20,11 @@ export default class NovaAutoMarket extends Command {
       `${bot.prefix}automarket ${bot.subprefix}all\n > Processes all your queries immediately and return the results.`,
       aliases: ["am"],
       category: "Nova",
-      subCommands: ["list", "clear", "remove", "session", "all"],
+      subCommands: ["list", "clear", "remove", "session", "all", "modclear"],
     });
   }
 
   async run(message, args) {
-    
-
-
-
     // reject empty messages
     if (!args.length) {
       const reply = `Please specify the id of an item to queue automarket.`;
@@ -339,6 +335,91 @@ export default class NovaAutoMarket extends Command {
       await message.channel.send(`${sendMsg}`);
     });
 
+  }
+
+  async modclear(message, args) {
+    // get list of mods
+    const privileged = this.bot.mods;
+
+    // not a mod
+    if (!privileged.includes(message.author.id)) {
+      return;
+    }
+
+    // only takes 2 things, empty or someone's name
+    if (!args.length) {
+      const list = await this.modList();
+      const header = {
+        owner: "Owner",
+        numEntries: "# of automarkets",
+      };
+
+      const dt = new DataTable({
+        header: header,
+        contents: list,
+      }); 
+  
+      const { reply } = PrettyPrinter.tabulate({
+        table: dt, 
+        name: null,
+        suppressEntryText: false,
+        page: 0,
+      });
+
+      await message.channel.send(`Automarket Stats:\n${reply}`);
+      return reply;
+    }
+
+    // removing all entries of a particular user
+    // id case / @ case
+    const id = args[0].match(/\d+/)[0]// id
+      || args[0].match(/(?<=<@!)\d+(?=>)/)[0] // @ case, converting to int rounds
+
+
+    console.log(id);
+    if (id) {
+      const user = await this.bot.client.users.fetch(id);
+      const msg = {
+        author: {
+          id: id,
+          username: user.username,
+        },
+        channel: message.channel,
+      };
+      await this.clear(msg, null);
+      return;
+    }
+    Logger.log(`Something went wrong here.`);
+    this.bot.adminChannel.send(`<@${this.bot.admin.id}> modclear ain't working sir.`);
+  }
+
+  // only called by adminclear
+  // grabs all automarkets
+  // processes them to count the number of each by owner
+  // and lists that
+  async modList() {
+    const list = await this.bot.scheduler.list({
+      command: MARKET,
+      owner: null,
+    });
+
+    const entriesByOwner = {};
+    list.forEach(item => {
+      const owner = item.owner;
+      entriesByOwner[owner] = (entriesByOwner[owner] || 0) + 1;
+    });
+
+    const adminList = [];
+
+    for (const [key, value] of Object.entries(entriesByOwner)) {
+      const user = await this.bot.client.users.fetch(key);
+      adminList.push({
+        owner: `${user.username} - ${key}`,
+        numEntries: `${value}`,
+      });
+    }
+
+    return adminList;
   }
 
   async session(message, args) {
