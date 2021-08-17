@@ -15,7 +15,11 @@
   "subprefix": "--",
   "dburl": "mongodb://localhost:27017",
   "aminterval": "1",
-  "admin": [],
+  "admin": {
+    "id": "admin user id",
+    "channel": "admin user channel"
+  },
+  "mods": [ "mod user id" ],
   "novaCredentials": {
     "username": "<NOVA_USERNAME_HERE>",
     "password": "<NOVA_PASSWORD_HERE>"
