@@ -18,6 +18,7 @@ const durationRegexObject = {
 const time24Regex = /\s([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
 const timeRegex = /\s((1[0-2]|0?[1-9]):([0-5][0-9]) ?([AaPp][Mm])?)$/;
 const hourRegex = /\s((1[0-2]|0?[1-9]) ?([AaPp][Mm])?)$/;
+const unixRegex = /(?<=(<t:))\d{10}/;
 
 export const REMIND_TYPE = {
     IN: 'in',
@@ -34,8 +35,6 @@ const inRegex = /in(?!.+\sin)\s.+/;
 const atRegex = /at(?!.+\sat)\s.+/;
 const everyRegex = /every(?!.+\severy)\s.+/;
 const cronRegex = /cron(?!.+\scron)\s.+/;
-const memberRegex = /^<@\!\d+>/;
-const notifyRegex = /^@(all|here)/;
 
 export default class Reminder extends EventEmitter {
     constructor(bot) {
@@ -69,34 +68,15 @@ export default class Reminder extends EventEmitter {
 
         // *in* pattern
         const inMatch = sentence.match(inRegex);
-        //console.log(inMatch);
-
-    
         // *every* pattern
         const everyMatch = sentence.match(everyRegex);
-
-        //console.log(everyMatch);
         // *at* pattern
         const atMatch = sentence.match(atRegex);
-        //console.log(atMatch);
         // *cron* pattern
         const cronMatch = sentence.match(cronRegex);
-        //console.log(cronMatch);
 
         const matches = [inMatch, everyMatch, atMatch, cronMatch].filter(x => x);
-        //console.log(matches);
-
-        // should be able to do something with this, but can't think of anything right now.
-        /*
-        const final = matches.length ? matches.reduce((prev, curr) => {
-            return prev.index > curr.index ? prev : curr;
-        }, {index: 0}) : null;
-
-        console.log(final);
-        */
-
         const selection = Math.max.apply(Math, matches.map(match => match ? match.index : 0));
-        //console.log(selection);
 
         return {
             inMatch: inMatch ? inMatch.index === selection ? inMatch : null : null,
@@ -118,12 +98,8 @@ export default class Reminder extends EventEmitter {
 
     static parseMatch(match, type) {
         const { index, input } = match;
-        //Logger.debug(index);
-        //Logger.debug(input);
         const message = input.slice(0, index ? index - 1 : 0); 
         const timeElement = input.slice(index + type.length + 1);
-        //Logger.debug(message);
-        //Logger.debug(timeElement);
         return {
             message: message,
             timeElement: timeElement,
@@ -174,6 +150,20 @@ export default class Reminder extends EventEmitter {
 
     static parseAtMatch(match, timezone) {
         const { message, timeElement } = Reminder.parseMatch(match, REMIND_TYPE.AT);
+        // check for unix at match
+        const unixTest = timeElement.match(unixRegex);
+        if (unixTest) {
+            const resultDate = moment.unix(unixTest[0]);
+            return {
+                type: REMIND_TYPE.AT,
+                replyMessage: message,
+                sleepUntil: resultDate,
+                modifier: timeElement,
+                repeat: false,
+                timeElement: timeElement
+            }
+        }
+
         const modifier = Reminder.getTimeObject(timeElement);
         const resultDate = Reminder.applyDateSet(modifier, timezone);
         return {
@@ -261,10 +251,21 @@ export default class Reminder extends EventEmitter {
 
     // main reminder processing method.
     async process(params) {
-        const { channelid, owner, message } = params;
-        const notify = message.match(notifyRegex);
-        const notifyMember = message.match(memberRegex);
+        const { channelid, owner, type } = params;
+        let { message } = params;
         const channel = await this.bot.client.channels.fetch(channelid);
+        if (type === REMIND_TYPE.CRON) {
+            const unixPart = message.match(unixRegex);
+            if (unixPart) {
+                const messageDate = new Date(unixPart[0] * 1000);
+                const now = new Date();
+                now.setHours(messageDate.getHours());
+                now.setMinutes(messageDate.getMinutes());
+                now.setSeconds(messageDate.getSeconds());
+                const newTimeStamp = moment(now).unix();
+                message = message.replace(unixRegex, newTimeStamp);
+            }
+        }
         await channel.send(`<@${owner}>! ${this.bot.name} has a message for you.\n> ${message}`);
     }
 }

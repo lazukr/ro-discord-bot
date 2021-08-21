@@ -124,15 +124,15 @@ export default class Remind extends Command {
 
     Logger.log(JSON.stringify(result.ops[0]));
 
-    
+    const unixSleepUntil = moment(sleepUntil).unix();
     if (result.result.ok) {
       Logger.log("Successfully queued!");
       const reply = `The message \`${replyMessage}\` has been added for ${message.author.username}.\nYou will be reminded` +
-      (type === REMIND_TYPE.IN ? ` in ${Reminder.modifierToSentence(modifier)} (${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()})` :
-      (type === REMIND_TYPE.EVERY) ? ` every ${Reminder.modifierToSentence(modifier)} (next one at ${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()})` :
-      (type === REMIND_TYPE.AT) ? ` ${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()}` : 
+      (type === REMIND_TYPE.IN ? ` in ${Reminder.modifierToSentence(modifier)} (<t:${unixSleepUntil}>)` :
+      (type === REMIND_TYPE.EVERY) ? ` every ${Reminder.modifierToSentence(modifier)} (next one at <t:${unixSleepUntil}>)` :
+      (type === REMIND_TYPE.AT) ? ` <t:${unixSleepUntil}>` : 
       (type === REMIND_TYPE.CRON) ? ` ${cronstrue.toString(modifier).toLowerCase()} (cron)` :
-      `${Moment.tz(sleepUntil, timezone ? timezone.args : null).calendar()}`);
+      `<t:${unixSleepUntil}>`);
       await message.channel.send(reply);
       return reply;
     }
@@ -189,14 +189,21 @@ export default class Remind extends Command {
       title: `**How to use reminder - Cron mode**`,
       description: `\`Cron\` should be used if you need a message to be sent periodically at fixed times, dates, or intervals.` +
       `\nIt will interpret the last \`cron\` in your message as the time parameter.` +
-      `\n> ${this.botprefix}remind <message> cron <cron pattern>` +
+      `\n> \`${this.botprefix}remind <message> cron <cron pattern>\`` +
       `\nFor example:` +
-      `\n> ${this.botprefix}remind hi cron 5 * * * *` +
+      `\n> \`${this.botprefix}remind hi cron 5 * * * *\`` +
       `\nwill ping you the message "hi" at the 5th minute of each hour` +
       `\nTo do a more repetitive example:` +
-      `\n> ${this.botprefix}remind hi cron */5 * * * *` +
+      `\n> \`${this.botprefix}remind hi cron */5 * * * *\`` +
       `\nwill ping you the message "hi" every 5th minute of each hour (0, 5, 10, 15...)` +
-      `\n> Cron Patterns:` +
+      `\n` +
+      `\n**Special Rule:**` +
+      `\n> - discord unix timestamp can be used with this to auto update the date to today's date.` +
+      `\n>   this effectively allows you to queue reminders that will update for that day.` +
+      `\n> \`${this.botprefix}remind raid at <t:1609531200> cron 0 8 * * *\`` +
+      `\n> this will queue a daily reminder at 8 am to remind about an event at 12 pm THAT DAY.` +
+      `\n` +
+      `\n**Cron Patterns:**` +
       `\n> \`\`\`*  *  *  *  *` +
       `\n> ┬  ┬  ┬  ┬  ┬` +
       `\n> │  │  │  │  │` +
@@ -207,7 +214,8 @@ export default class Remind extends Command {
       `\n> └──────────── minute (0 - 59)` +
       `\n> \`\`\`` +
       `\nIf you need more resources on constructing the correct cron pattern, please refer to https://crontab.guru/.` +
-      `\n> Differences with the **Every mode**` +
+      `\n` +
+      `\n**Differences with the \`Every Mode\`**` +
       `\n> - Every operates on regular intervals you set from now. Cron works solely based on a predefined pattern.` +
       `\n> - Every can do irregular intervals such as every 21 minutes. Cron can do it too, but irregular intervals will be cut off when that unit of time completes its cycle. E.g. */21 * * * * (every 21 minutes in the hour) = 8:21, 8:42, 9:21, 9:42...`,
     }
