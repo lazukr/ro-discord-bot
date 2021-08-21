@@ -263,8 +263,11 @@ export default class Reminder extends EventEmitter {
                 newMessageDate.setHours(messageDate.getHours());
                 newMessageDate.setMinutes(messageDate.getMinutes());
                 newMessageDate.setSeconds(messageDate.getSeconds());
-                message = message.replace(unixRegex,  moment(newMessageDate).unix());
-                Logger.log(`msgDate: ${unixPart[0]} | curDate: ${moment(currentDate).unix()} | newDate: ${moment(newMessageDate).unix()}`);
+                const curUnix = moment(currentDate).unix();
+                const newUnix = moment(newMessageDate).unix();
+                message = message.replace(unixRegex,  newUnix);
+                Logger.log(`msgDate: ${unixPart[0]} | curDate: ${curUnix} | newDate: ${newUnix}`);
+                this.bot.adminChannel.send(`msgDate: <t:${unixPart[0]}> | curDate: <t:${curUnix}> | newDate: <t:${newUnix}>`);
             }
         }
         await channel.send(`<@${owner}>! ${this.bot.name} has a message for you.\n> ${message}`);
