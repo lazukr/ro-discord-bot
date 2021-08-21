@@ -1,7 +1,6 @@
 import Logger from './logger';
 import { EventEmitter } from 'events';
 import moment from 'moment-timezone';
-import { DataResolver } from 'discord.js';
 const cron = require('cron-validator');
 
 // any amount of digits, duration does not care
@@ -258,19 +257,14 @@ export default class Reminder extends EventEmitter {
         if (type === REMIND_TYPE.CRON) {
             const unixPart = message.match(unixRegex);
             if (unixPart) {
-                const messageUnix = unixPart[0];
-                const messageDate = new Date(messageUnix * 1000);
-                const midnightCurrentDate = new Date();
-                midnightCurrentDate.setHours(0);
-                midnightCurrentDate.setMinutes(0);
-                midnightCurrentDate.setSeconds(0);
-                const midnightCurrentUnix = Math.floor(midnightCurrentDate.getTime() / 1000);
-                const offset = 
-                    messageDate.getHours() * 3600 +
-                    messageDate.getMinutes() * 60 +
-                    messageDate.getSeconds();
-
-                message = message.replace(unixRegex,  midnightCurrentUnix + offset);
+                const messageDate = new Date(unixPart[0] * 1000);
+                const currentDate = new Date();
+                const newMessageDate = new Date();
+                newMessageDate.setHours(messageDate.getHours());
+                newMessageDate.setMinutes(messageDate.getMinutes());
+                newMessageDate.setSeconds(messageDate.getSeconds());
+                message = message.replace(unixRegex,  moment(newMessageDate).unix());
+                Logger.log(`msgDate: ${unixPart[0]} | curDate: ${moment(currentDate).unix()} | newDate: ${moment(newMessageDate).unix()}`);
             }
         }
         await channel.send(`<@${owner}>! ${this.bot.name} has a message for you.\n> ${message}`);
