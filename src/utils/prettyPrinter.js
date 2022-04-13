@@ -183,7 +183,7 @@ class Tabulator {
         `Page ${page + 1} of ${this.pages.length}. Entries ${startEntry} to ${endEntry} of ${this.contents.length}.`; 
     }
 
-    if (this.originalLength) {
+    if (this.originalLength && !this.suppressEntryText) {
       reply += ` Total: ${this.originalLength}.`;
     }
 

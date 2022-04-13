@@ -73,6 +73,7 @@ export default class NovaMarket extends Command {
       name: name,
       id: id,
       filters: filters,
+      silent: silent,
     });
 
     if (!silent) {

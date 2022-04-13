@@ -95,6 +95,7 @@ export default class NvroCommands {
     name,
     id,
     filters,
+    silent = false,
   }) {
     const {PRICE, ADDPROPS, REFINE } = filters;
     Logger.log(`GETTING ${id.toString().padStart(5, '0')} $: ${PRICE} AP: ${ADDPROPS} RF: ${REFINE}`);
@@ -127,6 +128,8 @@ export default class NvroCommands {
         reply: reply,
       };
     }
+
+    table.suppressEntryText = silent;
     
     const reply = PrettyPrinter.tabulate(table);
     return reply;
