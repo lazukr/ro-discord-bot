@@ -10,6 +10,8 @@ const CONFIG = require('./config.json');
 const LOGGER = require('logger.js');
 const Scheduler = require('task-scheduler.js');
 const notifier = require('notifier');
+
+require('longjohn');
 // bot constants
 const LIVE_STORAGE = 'src/liveSchedulerDB';
 const POP_CHECK = 2000;
