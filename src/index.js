@@ -214,10 +214,10 @@ async function botboot() {
 botboot();
 process.on('unhandledRejection', (reason, promise) => {
   console.log('Unhandled Rejection at:', reason.stack || reason);
-  notifier.send(`Unhandled Rejection occurred at <t:${Date.now()}>`);
+  notifier.send(`Unhandled Rejection occurred at <t:${Date.now()}>. ${reason.stack.substring(0, 1500)}`);
 });
 
 process.on('uncaughtException', (reason, promise) => {
   console.log('uncaught exception at:', reason.stack || reason);
-  notifier.send(`uncaught exception occurred at <t:${Date.now()}>`);
+  notifier.send(`uncaught exception occurred at <t:${Date.now()}>. ${reason.stack.substring(0, 1500)}`);
 });
