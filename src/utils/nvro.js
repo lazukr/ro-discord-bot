@@ -22,6 +22,7 @@ export const MARKET_COLUMNS = Object.freeze({
   ADDPROPS: "property",
   REFINE: "refine",
   LOCATION: "location",
+  GRADE: "grade",
 });
 
 const SORT_ORDER = [

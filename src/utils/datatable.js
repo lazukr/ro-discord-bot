@@ -164,6 +164,7 @@ export class MarketDataTable extends DataTable {
     this.stringify(MARKET_COLUMNS.PRICE, "", "z");
     this.stringify(MARKET_COLUMNS.REFINE, "+");
     this.stringify(MARKET_COLUMNS.QUANTITY);
+    this.stringify(MARKET_COLUMNS.GRADE);
   }
 
   locationfy() {
