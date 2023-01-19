@@ -139,24 +139,6 @@ class RagnarokBot {
     await this.loadListeners();
   }
 
-  async popCheck() {
-    const pop = await nvro.getPopulation();
-
-    if (parseInt(pop) < POP_CHECK && this.prevPop > POP_CHECK) {
-        this.replyChannel.send(pop);
-    }
-
-    if (parseInt(pop) > POP_CHECK && this.prevPop < POP_CHECK) {
-      this.replyChannel.send(pop);
-    }
-    this.prevPop = pop;    
-
-  }
-
-  checkPopService() {
-    setInterval(async function () { this.popCheck()}.bind(this), 60000); 
-  }
-
   async start() {
     this.logger.info('Starting ro-discord-bot...');
     await this.login();
@@ -164,7 +146,6 @@ class RagnarokBot {
     notifier.set(this.replyChannel, this.config.ownerid);
     this.startScheduler();
     this.replyChannel.send(`Bear is ready!`);
-    this.checkPopService();
   }
   
   startScheduler() {
