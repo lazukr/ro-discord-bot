@@ -94,7 +94,7 @@ async function getItemInfo(message, itemID) {
   const fullName = `${itemInfo["Item ID"]} - ${itemInfo.Name}`;
   const npcSell = `$${itemInfo["NPC Sell Price"]}z`;
   const type = itemInfo.Type;
-  console.log(fullName, npcSell, type);
+  //console.log(fullName, npcSell, type);
 
   const embededMessage = {
     title: type,
