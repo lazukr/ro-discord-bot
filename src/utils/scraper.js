@@ -17,7 +17,7 @@ const LOGIN_BUTTON = 'input[type=submit]';
 const LINK = 'https://www.novaragnarok.com';
 const VALID_COOKIE_TEST = 'fluxSessionData';
 
-const MARKET_LINK = 'https://www.novaragnarok.com/data/cache/ajax/item_*.json';
+const MARKET_LINK = 'https://www.novaragnarok.com/data/cache/ajax/item_*.json?cache=0';
 // this function handles getting pages from websites.
 
 export default class Scraper {
